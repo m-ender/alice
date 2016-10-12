@@ -1,5 +1,8 @@
 # coding: utf-8
 
+Encoding.default_internal = Encoding::UTF_8
+Encoding.default_external = Encoding::UTF_8
+
 require_relative 'point2d'
 require_relative 'direction'
 
@@ -61,114 +64,41 @@ class Alice
     end
 
     def initialize(src, debug_level=false, in_str=$stdin, out_str=$stdout, max_ticks=-1)
+        @state = State.new(src, debug_level=false, in_str=$stdin, out_str=$stdout, max_ticks=-1)
+
         @debug_level = debug_level
-        @in_str = in_str
-        @out_str = out_str
-        @max_ticks = max_ticks
-
-        @grid = parse(src)
-        @height = @grid.size
-        @width = @height == 0 ? 0 : @grid[0].size
-
-        @ip = Point2D.new(0, 0)
-        @dir = East.new
-        @storage_offset = Point2D.new(0, 0) # Will be used when source modification grows the
-                                            # to the West or to the North.
-
-        @main = []
-
-        @tick = 0
     end
 
     def run
-        if !@ip
-            return
-        end
+        ticks_exceeded = false
         loop do
-            puts "\nTick #{@tick}:" if @debug_level > 1
-            p @ip if @debug_level > 1
-            cmd = cell @ip
-            p cmd if @debug_level > 1
-            if cmd[0] == :terminate
-                break
-            end
-            process cmd
-            puts @main*' ' + ' | ' + @aux.reverse*' ' if @debug_level > 1
-            @dir = get_new_dir
-            p @dir if @debug_level > 1
-            @ip += @dir.vec
+            @state.print_debug_info if @debug_level > 1
+            @state.mode.do_tick
+            ticks_exceeded = @state.max_ticks > -1 && @state.tick >= @state.max_ticks
+            break if @state.done || ticks_exceeded
 
+            # puts "\nTick #{@tick}:" if @debug_level > 1
+            # p @ip if @debug_level > 1
+            # p cmd if @debug_level > 1
+            # puts @main*' ' if @debug_level > 1
+            # p @dir if @debug_level > 1
+
+            cmd = cell @ip
+            process cmd
+            @ip += @dir.vec
             @tick += 1
-            break if @max_ticks > -1 && @tick >= @max_ticks
         end
 
-        @max_ticks > -1 && @tick >= @max_ticks
+        ticks_exceeded
     end
 
     private
 
-    def parse(src)
-        lines = src.split($/)
-
-        grid = lines.map{|l| l.chars.map{|c| OPERATORS[c]}}
-
-        width = grid.map(&:size).max
-
-        grid.each{|l| l.fill([:wall], l.length...width)}
-    end
-
-    def find_start
-        start = nil
-        @grid.each_with_index do |l,y|
-            l.each_with_index do |c,x|
-                if c[0] != :wall
-                    start = Point2D.new(x,y)
-                    break
-                end
-            end
-            if start
-                break
-            end
-        end
-
-        start
-    end
-
-    def x
-        @ip.x
-    end
-
-    def y
-        @ip.y
-    end
-
-    def cell coords
-        line = coords.y < 0 ? [] : @grid[coords.y] || []
-        coords.x < 0 ? [:wall] : line[coords.x] || [:wall]
-    end
-
-    def push_main val
-        @main << val
-    end
-
-    def push_aux val
-        @aux << val
-    end
-
-    def pop_main
-        @main.pop || 0
-    end
-
-    def pop_aux
-        @aux.pop || 0
-    end
-
-    def peek_main
-        @main[-1] || 0
-    end
-
     def process cmd
-        opcode, param = *cmd
+            cmd = cell @ip
+            process cmd
+        opcode = :nop
+        opcode = OPERATORS[mode][cmd] if cmd >= 0 && cmd <= 1114111 # maximum Unicode code point
 
         case opcode
         # Arithmetic
@@ -419,4 +349,109 @@ class Alice
     def error msg
         raise msg
     end
+end
+
+class State
+    def initialize(src, debug_level=false, in_str=$stdin, out_str=$stdout, max_ticks=-1)
+        @debug_level = debug_level
+        @in_str = in_str
+        @out_str = out_str
+        @max_ticks = max_ticks
+
+        @grid = parse(src)
+        @height = @grid.size
+        @width = @height == 0 ? 0 : @grid[0].size
+
+        @ip = Point2D.new(0, 0)
+        @dir = East.new
+        @storage_offset = Point2D.new(0, 0) # Will be used when source modification grows the
+                                            # to the West or to the North.
+
+        @stack = []
+        @tape = []
+        @mp = 0
+
+        @tick = 0
+        @done = false
+
+        @cardinal = Cardinal.new(self)
+        @ordinal = Ordinal.new(self)
+
+        @mode = @cardinal
+    end 
+
+    def x
+        @ip.x
+    end
+
+    def y
+        @ip.y
+    end
+
+    def cell(coords=@ip)
+        line = coords.y < 0 ? [] : @grid[coords.y] || []
+        coords.x < 0 ? 0 : line[coords.x] || 0
+    end
+
+    private
+
+    def parse(src)
+        lines = src.split($/)
+
+        grid = lines.map{|l| l.chars.map(&:ord)}
+
+        width = [*grid.map(&:size), 1].max
+
+        grid.each{|l| l.fill(0, l.length...width)}
+    end
+end
+
+class Mode
+    def initialize(state)
+        @state = state
+    end
+    
+    def do_tick
+        cmd = @state.cell
+        process cmd
+        opcode = :nop
+        opcode = self.class::OPERATORS[cmd.chr] if cmd >= 0 && cmd <= 1114111 # maximum Unicode code point
+
+        process opcode
+    end
+
+    def process
+        raise NotImplementedError
+    end
+
+    def push val
+        @state.stack << val
+    end
+
+    def pop
+        @state.stack.pop || pop_from_empty_stack
+    end
+
+    def pop_from_empty_stack
+        raise NotImplementedError
+    end
+
+    def peek
+        case mode
+        when :cardinal
+            @stack[-1] || 0
+        when :ordinal
+            @stack[-1] || ''
+        else
+            abort "This really shouldn't have happened."
+        end
+    end
+end
+
+class Cardinal < Mode
+
+end
+
+class Ordinal < Mode
+
 end
