@@ -17,6 +17,12 @@ class Point2D
         end
     end
 
+    def -(other)
+        if other.is_a?(Point2D)
+            return Point2D.new(@x-other.x, @y-other.y)
+        end
+    end
+
     def coerce(other)
         return self, other
     end

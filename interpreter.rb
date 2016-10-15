@@ -22,4 +22,5 @@ begin
     Alice.run(source, debug_level)
 rescue => e
     $stderr.puts e.message
+    $stderr.puts e.backtrace
 end
