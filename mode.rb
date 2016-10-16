@@ -333,6 +333,15 @@ class Ordinal < Mode
             push(line ? line.chomp : '')
         when :output
             @state.out_str << pop
+
+        when :concat
+            push(pop + pop)
+        when :riffle
+            sep = pop
+            push(pop.chars * sep)
+        when :split
+            sep = pop
+            $state.stack += pop.split(sep, -1)
         end
     end
 end
