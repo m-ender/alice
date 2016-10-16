@@ -23,6 +23,18 @@ class Point2D
         end
     end
 
+    def *(other)
+        if other.is_a?(Numeric)
+            return Point2D.new(@x*other, @y*other)
+        end
+    end
+
+    def /(other)
+        if other.is_a?(Numeric)
+            return Point2D.new(@x/other, @y/other)
+        end
+    end
+
     def coerce(other)
         return self, other
     end

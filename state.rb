@@ -76,6 +76,22 @@ class State
         @mode = @ordinal
     end
 
+    def push val
+        @stack << val
+    end
+
+    def pop
+        @stack.pop
+    end
+
+    def shift
+        @stack.shift
+    end
+
+    def unshift val
+        @stack.unshift val
+    end
+
     private
 
     def parse(src)

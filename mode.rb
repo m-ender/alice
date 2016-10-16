@@ -53,7 +53,7 @@ class Mode
     end
 
     def push val
-        @state.stack << val
+        @state.push val
     end
 
     def pop
@@ -65,22 +65,11 @@ class Mode
     end
 
     def unshift val
-        @state.stack.unshift val
+        @state.unshift val
     end
 
     def peek
         raise NotImplementedError
-    end
-
-    def read_byte
-        result = nil
-        if @next_byte
-            result = @next_byte
-            @next_byte = nil
-        else
-            result = @in_str.getc
-        end
-        result
     end
 
 end
@@ -116,6 +105,9 @@ class Cardinal < Mode
         '"'  => :string_mode,
         "'"  => :escape,
 
+        'i'  => :input,
+        'o'  => :output,
+
         #'('  => ,
         #')'  => ,
 
@@ -146,6 +138,26 @@ class Cardinal < Mode
         @state.wrap
     end
 
+    def pop
+        loop do
+            val = @state.pop
+            if val.is_a?(String)
+                found = false
+                val.scan(/-?\d+/) { push $&.to_i; found = true }
+                next if !found
+                val = @state.pop
+            end
+
+            break
+        end
+
+        val || 0
+    end
+
+    def process_string
+        @state.stack += @state.current_string
+    end
+
     def process opcode, cmd
         case opcode
         when :terminate
@@ -155,6 +167,51 @@ class Cardinal < Mode
             @state.set_ordinal
         when :wall
             @state.dir = @state.dir.reflect cmd.chr
+        when :move_east
+            @state.dir = East.new
+        when :move_west
+            @state.dir = West.new
+        when :move_south
+            @state.dir = South.new
+        when :move_north
+            @state.dir = North.new
+        when :turn_left
+            @state.dir = @state.dir.left
+        when :turn_right
+            @state.dir = @state.dir.right
+
+        when :mp_left
+            @state.mp -= 1
+        when :mp_right
+            @state.mp += 1
+
+        when :string_mode
+            @state.string_mode = true
+        when :escape
+            move
+            push @state.cell
+
+        when :input
+            char = @state.in_str.getc
+            push(char ? char.ord : -1)
+        when :output
+            @state.out_str << pop.chr
+
+        when :digit
+            push cmd.chr.to_i
+        when :add
+            push(pop + pop)
+        when :sub
+            y = pop
+            push(pop - y)
+        when :mul
+            push(pop * pop)
+        when :div
+            y = pop
+            push(pop / y)
+        when :mod
+            y = pop
+            push(pop % y)
         end
     end
 end
@@ -175,16 +232,19 @@ class Ordinal < Mode
         ':'  => :split,
         '%'  => :mod,
 
-        '<'  => :rotate_west,
-        '>'  => :rotate_east,
-        '^'  => :rotate_north,
-        'v'  => :rotate_south,
+        '<'  => :ensure_west,
+        '>'  => :ensure_east,
+        '^'  => :ensure_north,
+        'v'  => :ensure_south,
 
         '{'  => :strafe_left,
         '}'  => :strafe_right,
         
         '"'  => :string_mode,
         "'"  => :escape,
+
+        'i'  => :input,
+        'o'  => :output,
 
         #'('  => ,
         #')'  => ,
@@ -226,6 +286,17 @@ class Ordinal < Mode
         @state.ip += @state.dir.vec
     end
 
+    def pop
+        val = @state.pop
+
+        val ? val.to_s : ''
+    end
+
+    def process_string
+        # Will throw an error when cell isn't a valid code point
+        push @state.current_string.map(&:chr)*''
+    end
+
     def process opcode, cmd
         case opcode
         when :terminate
@@ -235,6 +306,31 @@ class Ordinal < Mode
             @state.set_cardinal
         when :wall
             @state.dir = @state.dir.reflect cmd.chr
+        when :ensure_west
+            @state.dir = @state.dir.reflect cmd.chr if @state.dir.x > 0
+        when :ensure_east
+            @state.dir = @state.dir.reflect cmd.chr if @state.dir.x < 0
+        when :ensure_north
+            @state.dir = @state.dir.reflect cmd.chr if @state.dir.y > 0
+        when :ensure_south
+            @state.dir = @state.dir.reflect cmd.chr if @state.dir.y < 0
+        when :strafe_left
+            @state.ip += (@state.dir.reverse + @state.dir.left) / 2
+        when :strafe_right
+            @state.ip += (@state.dir.reverse + @state.dir.right) / 2
+        when :string_mode
+            @state.string_mode = true
+        when :escape
+            move
+            push @state.cell.chr # Will throw an error when cell isn't a valid code point
+
+        when :digit
+            push(pop + cmd.chr)
+        when :input
+            line = @state.in_str.gets
+            push(line ? line.chomp : '')
+        when :output
+            @state.out_str << pop
         end
     end
 end
