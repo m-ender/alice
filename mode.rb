@@ -139,6 +139,8 @@ class Cardinal < Mode
     end
 
     def pop
+        val = nil
+
         loop do
             val = @state.pop
             if val.is_a?(String)
