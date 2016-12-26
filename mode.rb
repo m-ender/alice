@@ -60,6 +60,12 @@ class Mode
         raise NotImplementedError
     end
 
+    def peek
+        val = pop
+        push val
+        val
+    end
+
     def shift
         raise NotImplementedError
     end
@@ -91,6 +97,9 @@ class Cardinal < Mode
 
         '{'  => :turn_left,
         '}'  => :turn_right,
+        
+        '#'  => :trampoline,
+        '?'  => :cond_trampoline,
 
         '0'  => :digit, '1'  => :digit, '2'  => :digit, '3'  => :digit, '4'  => :digit, '5'  => :digit, '6'  => :digit, '7'  => :digit, '8'  => :digit, '9'  => :digit,
         '+'  => :add,
@@ -108,18 +117,21 @@ class Cardinal < Mode
         'i'  => :input,
         'o'  => :output,
 
+        'A'  => :bitand,
+        'N'  => :bitnot,
+        'O'  => :bitor,
+        'X'  => :bitxor,
+
         #'('  => ,
         #')'  => ,
 
         #'!'  => ,
-        #'#'  => ,
         #'$'  => ,
         #'&'  => ,
         #','  => ,
         #'.'  => ,
         #';'  => ,
         #'='  => ,
-        #'?'  => ,
         #'~'  => ,
         #'`'  => ,
 
@@ -181,6 +193,10 @@ class Cardinal < Mode
             @state.dir = @state.dir.left
         when :turn_right
             @state.dir = @state.dir.right
+        when :trampoline
+            move
+        when :cond_trampoline
+            move if pop == 0
 
         when :mp_left
             @state.mp -= 1
@@ -214,6 +230,15 @@ class Cardinal < Mode
         when :mod
             y = pop
             push(pop % y)
+        when :bitand
+            push(pop & pop)
+        when :bitnot
+            push(~pop)
+        when :bitor
+            push(pop | pop)
+        when :bitxor
+            push(pop ^ pop)
+
         end
     end
 end
@@ -242,6 +267,9 @@ class Ordinal < Mode
         '{'  => :strafe_left,
         '}'  => :strafe_right,
         
+        '#'  => :trampoline,
+        '?'  => :cond_trampoline,
+        
         '"'  => :string_mode,
         "'"  => :escape,
 
@@ -255,7 +283,6 @@ class Ordinal < Mode
         #']'  => ,
 
         #'!'  => ,
-        #'#'  => ,
         #'$'  => ,
         #'&'  => ,
         #','  => ,
@@ -320,6 +347,11 @@ class Ordinal < Mode
             @state.ip += (@state.dir.reverse + @state.dir.left) / 2
         when :strafe_right
             @state.ip += (@state.dir.reverse + @state.dir.right) / 2
+        when :trampoline
+            move
+        when :cond_trampoline
+            move if pop == ''
+
         when :string_mode
             @state.string_mode = true
         when :escape
