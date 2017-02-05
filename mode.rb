@@ -14,7 +14,7 @@ class Mode
     def do_tick
         cmd = @state.cell
         if @state.string_mode
-            if cmd >= 0 && cmd <= 1114111 && STRING_CMDS[cmd.chr]
+            if is_char?(cmd) && STRING_CMDS[cmd.chr]
                 case cmd.chr
                 when '"'
                     @state.string_mode = false
@@ -31,13 +31,17 @@ class Mode
             end
         else
             opcode = :nop
-            opcode = self.class::OPERATORS[cmd.chr] if cmd >= 0 && cmd <= 1114111 # maximum Unicode code point
+            opcode = self.class::OPERATORS[cmd.chr] if is_char?(cmd)
 
             process(opcode, cmd)
         end
 
         move
         @state.tick += 1
+    end
+
+    def is_char? val
+        val && val >= 0 && val <= 1114111
     end
 
     def process
@@ -74,10 +78,6 @@ class Mode
         @state.unshift val
     end
 
-    def peek
-        raise NotImplementedError
-    end
-
 end
 
 class Cardinal < Mode
@@ -99,7 +99,7 @@ class Cardinal < Mode
         '}'  => :turn_right,
         
         '#'  => :trampoline,
-        '?'  => :cond_trampoline,
+        '$'  => :cond_trampoline,
 
         '0'  => :digit, '1'  => :digit, '2'  => :digit, '3'  => :digit, '4'  => :digit, '5'  => :digit, '6'  => :digit, '7'  => :digit, '8'  => :digit, '9'  => :digit,
         '+'  => :add,
@@ -108,18 +108,22 @@ class Cardinal < Mode
         ':'  => :div,
         '%'  => :mod,
 
+        '?'  => :store_tape,
+        '!'  => :load_tape,
         '['  => :mp_left,
         ']'  => :mp_right,
         
         '"'  => :string_mode,
         "'"  => :escape,
 
-        'i'  => :input,
-        'o'  => :output,
+        'I'  => :input,
+        'O'  => :output,
+        'i'  => :raw_input,
+        'o'  => :raw_input,
 
         'A'  => :bitand,
         'N'  => :bitnot,
-        'O'  => :bitor,
+        'V'  => :bitor,
         'X'  => :bitxor,
 
         #'('  => ,
@@ -198,8 +202,12 @@ class Cardinal < Mode
         when :cond_trampoline
             move if pop == 0
 
+        when :store_tape
+            @state.tape[@state.mp] = pop
+        when :load_tape
+            push @state.tape[@state.mp]
         when :mp_left
-            @state.mp -= 1
+            @state.mp -= 1 if @state.mp > 0
         when :mp_right
             @state.mp += 1
 
@@ -213,7 +221,12 @@ class Cardinal < Mode
             char = @state.in_str.getc
             push(char ? char.ord : -1)
         when :output
+            # Will throw an error when value isn't a valid code point
             @state.out_str << pop.chr
+        when :raw_input
+            push(@state.in_str.getbyte || -1)
+        when :raw_output
+
 
         when :digit
             push cmd.chr.to_i
@@ -268,19 +281,28 @@ class Ordinal < Mode
         '}'  => :strafe_right,
         
         '#'  => :trampoline,
-        '?'  => :cond_trampoline,
+        '$'  => :cond_trampoline,
+
+        '?'  => :store_register,
+        '!'  => :load_register,
+        '['  => :rotate_left,
+        ']'  => :rotate_right,
         
         '"'  => :string_mode,
         "'"  => :escape,
 
-        'i'  => :input,
-        'o'  => :output,
+        'I'  => :input,
+        'O'  => :output,
+        'i'  => :raw_input,
+        'o'  => :raw_input,
+
+        'A'  => :intersection,
+        'N'  => :not,
+        'V'  => :union,
+        'X'  => :symdifference,
 
         #'('  => ,
         #')'  => ,
-
-        #'['  => ,
-        #']'  => ,
 
         #'!'  => ,
         #'$'  => ,
@@ -336,13 +358,13 @@ class Ordinal < Mode
         when :wall
             @state.dir = @state.dir.reflect cmd.chr
         when :ensure_west
-            @state.dir = @state.dir.reflect cmd.chr if @state.dir.x > 0
+            @state.dir = @state.dir.reflect '|' if @state.dir.x > 0
         when :ensure_east
-            @state.dir = @state.dir.reflect cmd.chr if @state.dir.x < 0
+            @state.dir = @state.dir.reflect '|' if @state.dir.x < 0
         when :ensure_north
-            @state.dir = @state.dir.reflect cmd.chr if @state.dir.y > 0
+            @state.dir = @state.dir.reflect '_' if @state.dir.y > 0
         when :ensure_south
-            @state.dir = @state.dir.reflect cmd.chr if @state.dir.y < 0
+            @state.dir = @state.dir.reflect '_' if @state.dir.y < 0
         when :strafe_left
             @state.ip += (@state.dir.reverse + @state.dir.left) / 2
         when :strafe_right
@@ -352,6 +374,39 @@ class Ordinal < Mode
         when :cond_trampoline
             move if pop == ''
 
+        when :store_register
+            i = 0
+            pop.each_char do |c|
+                @state.tape[i] = c.ord
+                i += 1
+            end
+            @state.tape[i] = -1
+        when :load_register
+            chars = []
+            i = 0
+            while is_char?(@state.tape[i])
+                chars << @state.tape[i]
+                i += 1
+            end
+            push chars.map(&:chr)*''
+
+        when :rotate_left
+            first = @state.tape[0]
+
+            if is_char?(first)
+                @state.tape.shift
+                last = 0
+                last += 1 while is_char?(@state.tape[last])
+                @state.tape.insert(last, first)
+            end
+        when :rotate_right
+            if is_char?(@state.tape[0])
+                last = 0
+                last += 1 while is_char?(@state.tape[last+1])
+                char = @state.tape.delete_at(last)
+                @state.tape.unshift char
+            end
+
         when :string_mode
             @state.string_mode = true
         when :escape
@@ -360,10 +415,15 @@ class Ordinal < Mode
 
         when :digit
             push(pop + cmd.chr)
+
         when :input
             line = @state.in_str.gets
             push(line ? line.chomp : '')
         when :output
+            @state.out_str.puts pop
+        when :raw_input
+            push(@state.in_str.read || '')
+        when :raw_output
             @state.out_str << pop
 
         when :concat
@@ -373,7 +433,35 @@ class Ordinal < Mode
             push(pop.chars * sep)
         when :split
             sep = pop
-            $state.stack += pop.split(sep, -1)
+            @state.stack += pop.split(sep, -1)
+
+        when :intersection
+            second = pop
+            first = pop
+            result = first.chars.select {|c|
+                test = second[c]
+                second[c] = '' if test
+                test
+            }
+            push result*''
+        when :union
+            second = pop
+            first = pop
+            first.each_char {|c| second[c] = '' if second[c]}
+            push(first + second)
+        when :symdifference
+            second = pop
+            first = pop
+
+            temp_second = second.clone
+
+            first.each_char {|c| second[c] = '' if second[c]}}
+            temp_second.each_char {|c| first[c] = '' if first[c]}}
+
+            push first+second
+
+        when :not
+            push(pop == '' ? 'Jabberwocky' : '')
         end
     end
 end
