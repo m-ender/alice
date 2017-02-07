@@ -101,6 +101,8 @@ class Cardinal < Mode
         '#'  => :trampoline,
         '$'  => :cond_trampoline,
 
+        '~'  => :swap,
+
         '0'  => :digit, '1'  => :digit, '2'  => :digit, '3'  => :digit, '4'  => :digit, '5'  => :digit, '6'  => :digit, '7'  => :digit, '8'  => :digit, '9'  => :digit,
         '+'  => :add,
         '-'  => :sub,
@@ -123,8 +125,13 @@ class Cardinal < Mode
 
         'A'  => :bitand,
         'N'  => :bitnot,
+        'P'  => :factorial,
+        'R'  => :negate,
+        'S'  => :sortswap,
         'V'  => :bitor,
         'X'  => :bitxor,
+
+        'n'  => :not,
 
         #'('  => ,
         #')'  => ,
@@ -136,7 +143,6 @@ class Cardinal < Mode
         #'.'  => ,
         #';'  => ,
         #'='  => ,
-        #'~'  => ,
         #'`'  => ,
 
         #'A'  => ,
@@ -251,6 +257,32 @@ class Cardinal < Mode
             push(pop | pop)
         when :bitxor
             push(pop ^ pop)
+        when :factorial
+            val = pop
+            if val >= 0
+                push (1..val).reduce(1, :*)
+            else
+                push (val..-1).reduce(1, :*)
+            end
+        when :negate
+            push -pop
+        when :not
+            push (pop == 0 ? 1 : 0)
+
+        when :sortswap
+            top = pop
+            second = pop
+
+            top, second = second, top if top < second
+
+            push second
+            push top
+
+        when :swap
+            top = pop
+            second = pop
+            push top
+            push second
 
         end
     end
@@ -283,6 +315,8 @@ class Ordinal < Mode
         '#'  => :trampoline,
         '$'  => :cond_trampoline,
 
+        '~'  => :swap,
+
         '?'  => :store_register,
         '!'  => :load_register,
         '['  => :rotate_left,
@@ -297,9 +331,21 @@ class Ordinal < Mode
         'o'  => :raw_input,
 
         'A'  => :intersection,
-        'N'  => :not,
+        'D'  => :deduplicate,
+        'N'  => :complement,
+        'P'  => :permutations,
+        'R'  => :reverse,
+        'S'  => :sortswap,
         'V'  => :union,
         'X'  => :symdifference,
+
+        'c'  => :characters,
+        'l'  => :lower_case,
+        'u'  => :upper_case,
+        'n'  => :not,
+        'r'  => :expand_ranges,
+        's'  => :sort,
+        'x'  => :swap_case,
 
         #'('  => ,
         #')'  => ,
@@ -313,7 +359,6 @@ class Ordinal < Mode
         #'='  => ,
         #'?'  => ,
         #'`'  => ,
-        #'~'  => ,
 
         #'A'  => ,
         # ...
@@ -345,7 +390,7 @@ class Ordinal < Mode
 
     def process_string
         # Will throw an error when cell isn't a valid code point
-        push @state.current_string.map(&:chr)*''
+        push @state.current_string.map(&:chr).join
     end
 
     def process opcode, cmd
@@ -388,7 +433,7 @@ class Ordinal < Mode
                 chars << @state.tape[i]
                 i += 1
             end
-            push chars.map(&:chr)*''
+            push chars.map(&:chr).join
 
         when :rotate_left
             first = @state.tape[0]
@@ -443,7 +488,7 @@ class Ordinal < Mode
                 second[c] = '' if test
                 test
             }
-            push result*''
+            push result.join
         when :union
             second = pop
             first = pop
@@ -459,9 +504,61 @@ class Ordinal < Mode
             temp_second.each_char {|c| first[c] = '' if first[c]}}
 
             push first+second
+        when :complement
+            second = pop
+            first = pop
+            second.each_char {|c| first[c] = '' if first[c]}
+
+            push first
+
+        when :deduplicate
+            push pop.chars.uniq.join
+
+        when :sort
+            push pop.chars.sort.join
+
+        when :characters
+            @stack.state += pop.chars
+        when :lower_case
+            push pop.downcase
+        when :upper_case
+            push pop.upcase
+        when :swap_case
+            push pop.swapcase
 
         when :not
             push(pop == '' ? 'Jabberwocky' : '')
+
+        when :permutations
+            @state.stack += pop.chars.permutation.map{|p| p.join}.to_a
+        when :reverse
+            push pop.reverse
+
+        when :expand_ranges
+            val = pop
+            val.chars.each_cons(2).map{ |a,b| 
+                if a > b
+                    (b..a).drop(1).to_a.reverse.join
+                else
+                    (a...b).to_a.join
+                end
+            }.join + (val[-1] || '')
+
+        when :sortswap
+            top = pop
+            second = pop
+
+            top, second = second, top if top < second
+
+            push second
+            push top
+
+        when :swap
+            top = pop
+            second = pop
+            push top
+            push second
+
         end
     end
 end
