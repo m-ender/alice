@@ -121,7 +121,7 @@ class Cardinal < Mode
         'I'  => :input,
         'O'  => :output,
         'i'  => :raw_input,
-        'o'  => :raw_input,
+        'o'  => :raw_output,
 
         'A'  => :bitand,
         'N'  => :bitnot,
@@ -328,7 +328,7 @@ class Ordinal < Mode
         'I'  => :input,
         'O'  => :output,
         'i'  => :raw_input,
-        'o'  => :raw_input,
+        'o'  => :raw_output,
 
         'A'  => :intersection,
         'D'  => :deduplicate,
@@ -500,8 +500,8 @@ class Ordinal < Mode
 
             temp_second = second.clone
 
-            first.each_char {|c| second[c] = '' if second[c]}}
-            temp_second.each_char {|c| first[c] = '' if first[c]}}
+            first.each_char {|c| second[c] = '' if second[c]}
+            temp_second.each_char {|c| first[c] = '' if first[c]}
 
             push first+second
         when :complement
