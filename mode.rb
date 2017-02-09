@@ -12,6 +12,8 @@ class Mode
     end
     
     def do_tick
+        move if @state.tick > 0
+
         cmd = @state.cell
         if @state.string_mode
             if is_char?(cmd) && STRING_CMDS[cmd.chr]
@@ -36,7 +38,6 @@ class Mode
             process(opcode, cmd)
         end
 
-        move
         @state.tick += 1
     end
 
