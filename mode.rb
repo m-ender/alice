@@ -3,6 +3,8 @@
 require_relative 'point2d'
 require_relative 'direction'
 
+require 'prime'
+
 class Mode
     # List of operators which should not be ignored while in string mode.
     STRING_CMDS = "\"'\\/_|"
@@ -125,6 +127,7 @@ class Cardinal < Mode
         'o'  => :raw_output,
 
         'A'  => :bitand,
+        'D'  => :deduplicate,
         'N'  => :bitnot,
         'P'  => :factorial,
         'R'  => :negate,
@@ -132,6 +135,11 @@ class Cardinal < Mode
         'V'  => :bitor,
         'X'  => :bitxor,
 
+        'a'  => :const_10,
+        'b'  => :random,
+        'c'  => :prime_factors,
+        'e'  => :const_m1,
+        'f'  => :prime_factor_pairs,
         'n'  => :not,
 
         #'('  => ,
@@ -233,7 +241,7 @@ class Cardinal < Mode
         when :raw_input
             push(@state.in_str.getbyte || -1)
         when :raw_output
-
+            # TODO: do
 
         when :digit
             push cmd.chr.to_i
@@ -267,8 +275,27 @@ class Cardinal < Mode
             end
         when :negate
             push -pop
+        when :prime_factors
+            # TODO: settle on behaviour for n < 2
+            Prime.prime_division(pop).each{ |p,n| n.times{ push p } }
+        when :prime_factor_pairs
+            # TODO: settle on behaviour for n < 2
+            Prime.prime_division(pop).flatten.each{ |x| push x }
+        when :deduplicate
+            Prime.int_from_prime_division(Prime.prime_division(pop.map{ |p,n| [p,1]}))
+
         when :not
             push (pop == 0 ? 1 : 0)
+
+        when :random
+            val = pop
+            if val > 0
+                push rand val
+            elsif val == 0
+                push 0 # TODO: or something else?
+            else
+                push -(rand val)
+            end
 
         when :sortswap
             top = pop
@@ -284,6 +311,11 @@ class Cardinal < Mode
             second = pop
             push top
             push second
+
+        when :const_10
+            push 10
+        when :const_m1
+            push -1
 
         end
     end
@@ -340,12 +372,18 @@ class Ordinal < Mode
         'V'  => :union,
         'X'  => :symdifference,
 
+        'a'  => :const_lf,
+        'b'  => :shuffle,
         'c'  => :characters,
+        'e'  => :const_empty,
+        'f'  => :runs,
+        'h'  => :head,
         'l'  => :lower_case,
         'u'  => :upper_case,
         'n'  => :not,
         'r'  => :expand_ranges,
         's'  => :sort,
+        't'  => :tail,
         'x'  => :swap_case,
 
         #'('  => ,
@@ -518,8 +556,32 @@ class Ordinal < Mode
         when :sort
             push pop.chars.sort.join
 
+        when :shuffle
+            push pop.chars.shuffle.join
+
         when :characters
             @stack.state += pop.chars
+        when :runs
+            pop.scan(/(.)\1*/s){push $&}
+        when :head
+            str = pop
+            if pop == ''
+                push ''
+                push ''
+            else
+                push str[0]
+                push str[1..-1]
+            end
+        when :tail
+            str = pop
+            if pop == ''
+                push ''
+                push ''
+            else
+                push str[0..-2]
+                push str[-1]
+            end
+
         when :lower_case
             push pop.downcase
         when :upper_case
@@ -559,6 +621,11 @@ class Ordinal < Mode
             second = pop
             push top
             push second
+
+        when :const_lf
+            push "\n"
+        when :const_empty
+            push ""
 
         end
     end
