@@ -67,6 +67,14 @@ class Mode
         raise NotImplementedError
     end
 
+    def push_return
+        @state.push_return
+    end
+
+    def pop_return
+        @state.pop_return
+    end
+
     def peek
         val = pop
         push val
@@ -105,6 +113,8 @@ class Cardinal < Mode
         '$'  => :cond_trampoline,
 
         '~'  => :swap,
+        '.'  => :dup,
+        ';'  => :discard,
 
         '0'  => :digit, '1'  => :digit, '2'  => :digit, '3'  => :digit, '4'  => :digit, '5'  => :digit, '6'  => :digit, '7'  => :digit, '8'  => :digit, '9'  => :digit,
         '+'  => :add,
@@ -140,6 +150,8 @@ class Cardinal < Mode
         'c'  => :prime_factors,
         'e'  => :const_m1,
         'f'  => :prime_factor_pairs,
+        'j'  => :jump,
+        'k'  => :return,
         'n'  => :not,
 
         #'('  => ,
@@ -216,6 +228,14 @@ class Cardinal < Mode
             move
         when :cond_trampoline
             move if pop == 0
+
+        when :jump
+            push_return
+            y = pop
+            x = pop
+            @state.jump(x,y)
+        when :return
+            @state.jump(*pop_return)
 
         when :store_tape
             @state.tape[@state.mp] = pop
@@ -311,6 +331,12 @@ class Cardinal < Mode
             second = pop
             push top
             push second
+        when :dup
+            top = pop
+            push top
+            push top
+        when :discard
+            pop
 
         when :const_10
             push 10
@@ -349,6 +375,8 @@ class Ordinal < Mode
         '$'  => :cond_trampoline,
 
         '~'  => :swap,
+        '.'  => :dup,
+        ';'  => :discard,
 
         '?'  => :store_register,
         '!'  => :load_register,
@@ -378,6 +406,8 @@ class Ordinal < Mode
         'e'  => :const_empty,
         'f'  => :runs,
         'h'  => :head,
+        'j'  => :jump,
+        'k'  => :return,
         'l'  => :lower_case,
         'u'  => :upper_case,
         'n'  => :not,
@@ -457,6 +487,14 @@ class Ordinal < Mode
             move
         when :cond_trampoline
             move if pop == ''
+
+        when :jump
+            push_return
+            label = pop
+            # TODO: scan for x and y
+            @state.jump(x,y)
+        when :return
+            @state.jump(*pop_return)
 
         when :store_register
             i = 0
@@ -621,6 +659,12 @@ class Ordinal < Mode
             second = pop
             push top
             push second
+        when :dup
+            top = pop
+            push top
+            push top
+        when :discard
+            pop
 
         when :const_lf
             push "\n"

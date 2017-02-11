@@ -32,6 +32,7 @@ class State
         @mp = 0
         @string_mode = false
         @current_string = []
+        @return_stack = []
 
         @tick = 0
         @done = false
@@ -48,6 +49,11 @@ class State
 
     def y
         @ip.y
+    end
+
+    def jump x, y
+        @ip.x = x
+        @ip.y = y
     end
 
     def cell(coords=@ip)
@@ -82,6 +88,14 @@ class State
 
     def pop
         @stack.pop
+    end
+
+    def push_return
+        @return_stack.push([@ip.x, @ip.y])
+    end
+
+    def pop_return
+        @return_stack.pop || [0,0]
     end
 
     def shift
