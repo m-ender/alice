@@ -62,9 +62,25 @@ class State
         offset.x < 0 ? 0 : line[offset.x] || 0
     end
 
+    def min_x
+        -@storage_offset.x
+    end
+
+    def min_y
+        -@storage_offset.y
+    end
+
+    def max_x
+        @width - @storage_offset.x - 1
+    end
+
+    def max_y
+        @height - @storage_offset.y - 1
+    end
+
     def on_boundary(coords=@ip)
         offset = coords + @storage_offset
-        offset.x == 0 || offset.y == 0 || offset.x == @width-1 || offset.y == @height-1
+        offset.x == min_x || offset.y == min_y || offset.x == max_x || offset.y == max_y
     end
 
     def wrap

@@ -137,6 +137,7 @@ class Cardinal < Mode
         'o'  => :raw_output,
 
         'A'  => :bitand,
+        'C'  => :binomial,
         'D'  => :deduplicate,
         'N'  => :bitnot,
         'P'  => :factorial,
@@ -293,6 +294,23 @@ class Cardinal < Mode
             else
                 push (val..-1).reduce(1, :*)
             end
+        when :binomial
+            k = pop
+            n = pop
+
+            k = n-k if n > 0 && k > n/2
+            
+            if k < 0
+                push 0
+            else
+                prod = 1
+                (1..k).each do |i|
+                    prod *= n
+                    prod /= i
+                    n -= 1
+                end
+                push prod
+            end
         when :negate
             push -pop
         when :prime_factors
@@ -392,6 +410,7 @@ class Ordinal < Mode
         'o'  => :raw_output,
 
         'A'  => :intersection,
+        'C'  => :subsequences,
         'D'  => :deduplicate,
         'N'  => :complement,
         'P'  => :permutations,
@@ -462,6 +481,44 @@ class Ordinal < Mode
         push @state.current_string.map(&:chr).join
     end
 
+    def scan_source label
+        ip_dir = @state.dir
+        grid = @state.grid
+        while !ip_dir.is_a? NorthEast
+            grid = grid.transpose.reverse
+            ip_dir = ip_dir.left
+        end
+
+        height = grid.size
+        width = height == 0 ? 0 : grid[0].size
+
+        positions = []
+
+        (0..width+height-2).map do |d|
+            min_x = [0,d-height+1].max
+            max_x = [width-1,d].min
+            line = (min_x..max_x).map do |x|
+                y = d - x
+                grid[y][x].chr
+            end.join
+
+            line.scan(/(?=#{label})/) do
+                x = min_x + $`.size + label.size - 1
+                y = d-x
+                positions << [x,y]
+            end
+        end
+
+        ip_dir = @state.dir
+        while !ip_dir.is_a? NorthEast
+            ip_dir = ip_dir.left
+            positions.map! {|x, y| [grid.size - y - 1, x]}
+            grid = grid.reverse.transpose
+        end
+
+        positions
+    end
+
     def process opcode, cmd
         case opcode
         when :terminate
@@ -491,8 +548,8 @@ class Ordinal < Mode
         when :jump
             push_return
             label = pop
-            # TODO: scan for x and y
-            @state.jump(x,y)
+            positions = scan_source(label)
+            @state.jump(*positions[0]) if !positions.empty?
         when :return
             @state.jump(*pop_return)
 
@@ -630,10 +687,15 @@ class Ordinal < Mode
         when :not
             push(pop == '' ? 'Jabberwocky' : '')
 
-        when :permutations
-            @state.stack += pop.chars.permutation.map{|p| p.join}.to_a
         when :reverse
             push pop.reverse
+        when :permutations
+            @state.stack += pop.chars.permutation.map{|p| p.join}.to_a
+        when :subsequences
+            str = pop.chars
+            (0..str.size).each do |l|
+                str.combination(l).each {|s| push s.join}
+            end
 
         when :expand_ranges
             val = pop
