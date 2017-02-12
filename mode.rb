@@ -127,6 +127,8 @@ class Cardinal < Mode
         '!'  => :load_tape,
         '['  => :mp_left,
         ']'  => :mp_right,
+        '('  => :search_left,
+        ')'  => :search_right,
         
         '"'  => :string_mode,
         "'"  => :escape,
@@ -151,9 +153,12 @@ class Cardinal < Mode
         'c'  => :prime_factors,
         'e'  => :const_m1,
         'f'  => :prime_factor_pairs,
+        'h'  => :inc,
         'j'  => :jump,
         'k'  => :return,
         'n'  => :not,
+        'r'  => :power,
+        't'  => :dec,
 
         #'('  => ,
         #')'  => ,
@@ -241,11 +246,18 @@ class Cardinal < Mode
         when :store_tape
             @state.tape[@state.mp] = pop
         when :load_tape
-            push @state.tape[@state.mp]
+            push (@state.tape[@state.mp] || -1)
         when :mp_left
             @state.mp -= 1 if @state.mp > 0
         when :mp_right
             @state.mp += 1
+        when :search_left
+            val = pop
+            @state.mp -= 1 while @state.mp > 0 && @state.tape[@state.mp] != val
+        when :search_right
+            @state.tape.pop while @state.tape[-1] == -1
+            val = pop
+            @state.mp += 1 while @state.mp < @state.tape.size && @state.tape[@state.mp] != val
 
         when :string_mode
             @state.string_mode = true
@@ -279,6 +291,18 @@ class Cardinal < Mode
         when :mod
             y = pop
             push(pop % y)
+        when :inc
+            push(pop+1)
+        when :dec
+            push(pop-1)
+        when :power
+            y = pop
+            x = pop
+            if y < 0
+                push 0
+            else
+                push x**y
+            end
         when :bitand
             push(pop & pop)
         when :bitnot
