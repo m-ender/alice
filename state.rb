@@ -188,6 +188,6 @@ class State
 
         width = [*grid.map(&:size), 1].max
 
-        grid.each{|l| l.fill(0, l.length...width)}
+        grid.each{|l| l.fill(32, l.length...width)}
     end
 end
