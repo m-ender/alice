@@ -460,12 +460,14 @@ class Ordinal < Mode
         'c'  => :characters,
         'e'  => :const_empty,
         'f'  => :runs,
+        'g'  => :get_diagonal,
         'h'  => :head,
         'j'  => :jump,
         'k'  => :return,
         'l'  => :lower_case,
         'u'  => :upper_case,
         'n'  => :not,
+        'p'  => :put_diagonal,
         'r'  => :expand_ranges,
         's'  => :sort,
         't'  => :tail,
@@ -588,6 +590,30 @@ class Ordinal < Mode
             @state.jump(*positions[0]) if !positions.empty?
         when :return
             @state.jump(*pop_return)
+
+        when :get_diagonal
+            label = pop
+            positions = scan_source(label)
+            if !positions.empty?
+                cursor = Point2D.new(*positions[0]) + @state.dir.vec
+                string = ''
+                while is_char? @state.cell(cursor)
+                    string << @state.cell(cursor)
+                    cursor += @state.dir.vec
+                end
+                push string
+            end
+        when :put_diagonal
+            value = pop
+            label = pop
+            positions = scan_source(label)
+            if !positions.empty?
+                cursor = Point2D.new(*positions[0]) + @state.dir.vec
+                value.each_char {|c|
+                    @state.put_cell(cursor, c.ord)
+                    cursor += @state.dir.vec
+                }
+            end
 
         when :store_register
             i = 0

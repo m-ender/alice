@@ -59,7 +59,7 @@ class State
     def cell(coords=@ip)
         offset = coords + @storage_offset
         line = offset.y < 0 ? [] : @grid[offset.y] || []
-        offset.x < 0 ? 0 : line[offset.x] || 0
+        offset.x < 0 ? -1 : line[offset.x] || -1
     end
 
     def put_cell(coords, value)
@@ -68,20 +68,20 @@ class State
         # Grow grid if necessary
         if offset.x >= @width
             @width = offset.x+1
-            @grid.each{|l| l.fill(0, l.length...@width)}
+            @grid.each{|l| l.fill(-1, l.length...@width)}
         end
 
         if offset.x < 0
             @width -= offset.x
             @storage_offset.x -= offset.x
-            @grid.map{|l| [0]*(-offset.x) + l}
+            @grid.map{|l| [-1]*(-offset.x) + l}
             offset.x = 0
         end
 
         if offset.y >= @height
             @height = offset.y+1
             while @grid.size < height
-                @grid << [0]*@width
+                @grid << [-1]*@width
             end
         end
 
@@ -89,7 +89,7 @@ class State
             @height -= offset.y
             @storage_offset.y -= offset.y
             while @grid.size < height
-                @grid.unshift([0]*@width)
+                @grid.unshift([-1]*@width)
             end
             offset.y = 0
         end
@@ -98,22 +98,22 @@ class State
 
         # Shrink the grid if possible
         if value == 0 && on_boundary(coords)
-            while @height > 0 && @grid[0]-[0] == []
+            while @height > 0 && @grid[0]-[-1] == []
                 @grid.shift
                 @height -= 1
             end
 
-            while @height > 0 && @grid[-1]-[0] == []
+            while @height > 0 && @grid[-1]-[-1] == []
                 @grid.pop
                 @height -= 1
             end
 
-            while @width > 0 && @grid.transpose[0]-[0] == []
+            while @width > 0 && @grid.transpose[0]-[-1] == []
                 @grid.map(&:shift)
                 @width -= 1
             end
 
-            while @width > 0 && @grid.transpose[-1]-[0] == []
+            while @width > 0 && @grid.transpose[-1]-[-1] == []
                 @grid.map(&:pop)
                 @width -= 1
             end
