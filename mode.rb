@@ -153,10 +153,12 @@ class Cardinal < Mode
         'c'  => :prime_factors,
         'e'  => :const_m1,
         'f'  => :prime_factor_pairs,
+        'g'  => :get_cell,
         'h'  => :inc,
         'j'  => :jump,
         'k'  => :return,
         'n'  => :not,
+        'p'  => :put_cell,
         'r'  => :power,
         't'  => :dec,
 
@@ -242,6 +244,16 @@ class Cardinal < Mode
             @state.jump(x,y)
         when :return
             @state.jump(*pop_return)
+
+        when :get_cell
+            y = pop
+            x = pop
+            push @state.cell(Point2D.new(x,y))
+        when :put_cell
+            v = pop
+            y = pop
+            x = pop
+            @state.put_cell(Point2D.new(x,y), v)
 
         when :store_tape
             @state.tape[@state.mp] = pop

@@ -62,6 +62,64 @@ class State
         offset.x < 0 ? 0 : line[offset.x] || 0
     end
 
+    def put_cell(coords, value)
+        offset = coords + @storage_offset
+
+        # Grow grid if necessary
+        if offset.x >= @width
+            @width = offset.x+1
+            @grid.each{|l| l.fill(0, l.length...@width)}
+        end
+
+        if offset.x < 0
+            @width -= offset.x
+            @storage_offset.x -= offset.x
+            @grid.map{|l| [0]*(-offset.x) + l}
+            offset.x = 0
+        end
+
+        if offset.y >= @height
+            @height = offset.y+1
+            while @grid.size < height
+                @grid << [0]*@width
+            end
+        end
+
+        if offset.y < 0
+            @height -= offset.y
+            @storage_offset.y -= offset.y
+            while @grid.size < height
+                @grid.unshift([0]*@width)
+            end
+            offset.y = 0
+        end
+
+        @grid[offset.y][offset.x] = value
+
+        # Shrink the grid if possible
+        if value == 0 && on_boundary(coords)
+            while @height > 0 && @grid[0]-[0] == []
+                @grid.shift
+                @height -= 1
+            end
+
+            while @height > 0 && @grid[-1]-[0] == []
+                @grid.pop
+                @height -= 1
+            end
+
+            while @width > 0 && @grid.transpose[0]-[0] == []
+                @grid.map(&:shift)
+                @width -= 1
+            end
+
+            while @width > 0 && @grid.transpose[-1]-[0] == []
+                @grid.map(&:pop)
+                @width -= 1
+            end
+        end
+    end
+
     def min_x
         -@storage_offset.x
     end
@@ -79,8 +137,7 @@ class State
     end
 
     def on_boundary(coords=@ip)
-        offset = coords + @storage_offset
-        offset.x == min_x || offset.y == min_y || offset.x == max_x || offset.y == max_y
+        coords.x == min_x || coords.y == min_y || coords.x == max_x || coords.y == max_y
     end
 
     def wrap
