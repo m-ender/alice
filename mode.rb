@@ -96,6 +96,8 @@ class Cardinal < Mode
         ' '  => :nop,
         '@'  => :terminate,
 
+        '`'  => :debug,
+
         '/'  => :mirror,
         '\\' => :mirror,
         '_'  => :wall,
@@ -123,8 +125,8 @@ class Cardinal < Mode
         ':'  => :div,
         '%'  => :mod,
 
-        '?'  => :store_tape,
-        '!'  => :load_tape,
+        '!'  => :store_tape,
+        '?'  => :load_tape,
         '['  => :mp_left,
         ']'  => :mp_right,
         '('  => :search_left,
@@ -172,7 +174,6 @@ class Cardinal < Mode
         #'.'  => ,
         #';'  => ,
         #'='  => ,
-        #'`'  => ,
 
         #'A'  => ,
         # ...
@@ -215,6 +216,14 @@ class Cardinal < Mode
         case opcode
         when :terminate
             @state.done = true
+        when :debug
+            $stderr.puts 'Mode: Cardinal'
+            @state.print_grid
+            @state.print_stack
+            @state.print_tape
+            @state.print_register
+            @state.print_tick
+
         when :mirror
             @state.dir = @state.dir.reflect cmd.chr
             @state.set_ordinal
@@ -404,18 +413,21 @@ end
 class Ordinal < Mode
     OPERATORS = {
         ' '  => :nop,
+        '@'  => :terminate,
+
+        '`'  => :debug,
+
         '/'  => :mirror,
         '\\' => :mirror,
         '_'  => :wall,
         '|'  => :wall,
-        '@'  => :terminate,
 
         '0'  => :digit, '1'  => :digit, '2'  => :digit, '3'  => :digit, '4'  => :digit, '5'  => :digit, '6'  => :digit, '7'  => :digit, '8'  => :digit, '9'  => :digit,
         '+'  => :concat,
-        '-'  => :sub,
+        '-'  => :drop,
         '*'  => :riffle,
         ':'  => :split,
-        '%'  => :mod,
+        # '%'  => :mod,
 
         '<'  => :ensure_west,
         '>'  => :ensure_east,
@@ -432,8 +444,8 @@ class Ordinal < Mode
         '.'  => :dup,
         ';'  => :discard,
 
-        '?'  => :store_register,
-        '!'  => :load_register,
+        '!'  => :store_register,
+        '?'  => :load_register,
         '['  => :rotate_left,
         ']'  => :rotate_right,
         
@@ -561,6 +573,14 @@ class Ordinal < Mode
         case opcode
         when :terminate
             @state.done = true
+        when :debug
+            $stderr.puts 'Mode: Ordinal'
+            @state.print_grid
+            @state.print_stack
+            @state.print_tape
+            @state.print_register
+            @state.print_tick
+
         when :mirror
             @state.dir = @state.dir.reflect cmd.chr
             @state.set_cardinal
@@ -623,13 +643,7 @@ class Ordinal < Mode
             end
             @state.tape[i] = -1
         when :load_register
-            chars = []
-            i = 0
-            while is_char?(@state.tape[i])
-                chars << @state.tape[i]
-                i += 1
-            end
-            push chars.map(&:chr).join
+            push @state.read_register
 
         when :rotate_left
             first = @state.tape[0]
@@ -669,6 +683,17 @@ class Ordinal < Mode
 
         when :concat
             push(pop + pop)
+        when :drop
+            y = pop
+            x = pop
+            result = x.chars
+            x.scan(/(?=#{y})/) do
+                y.size.times do |i|
+                    result[$`.size + i] = 0
+                end
+            end
+
+            push (result-[0]).join
         when :riffle
             sep = pop
             push(pop.chars * sep)

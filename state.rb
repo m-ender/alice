@@ -179,7 +179,68 @@ class State
         @stack.unshift val
     end
 
+    def read_register
+        chars = []
+        i = 0
+        while is_char?(@tape[i])
+            chars << @tape[i]
+            i += 1
+        end
+        chars.map(&:chr).join
+    end
+
+    def print_grid
+        $stderr.puts 'Grid:'
+        $stderr.puts ' '*(@ip.x+@storage_offset.x)+'v'
+        @grid.each_with_index do |line, i|
+            line.each {|c| $stderr << (is_char?(c) ? c : 0).chr}
+            $stderr << ' <' if i == @ip.y + @storage_offset.y
+            $stderr.puts
+        end
+        $stderr.puts
+        $stderr.puts "Top left coordinate: #{(@storage_offset*-1).pretty}"
+        $stderr.puts "IP: #{@ip.pretty}"
+        $stderr.puts "Direction: #{@dir.class}"
+        $stderr.puts "Return address stack: ... (0,0)#{@return_stack.map{|p|' '+p.pretty}.join}"
+        $stderr.puts
+    end
+
+    def print_tape
+        $stderr.puts 'Tape:'
+        pos = [(@mp - @tape.size)*3,0].max
+        width = 2
+        @tape.each_with_index do |elem, i|
+            $stderr << elem << ' '
+            pos += elem.to_s.size+1 if i < @mp
+            width = elem.to_s.size if i == @mp
+        end
+        $stderr.puts "#{'-1 '*[1, @mp-@tape.size+1].max}..."
+        $stderr.puts ' '*pos + '^'*width
+        $stderr.puts
+    end
+
+    def print_stack
+        $stderr.puts 'Stack:'
+        $stderr.puts "[...#{@stack.map{|e|' '+e.inspect}.join}]"
+        $stderr.puts
+    end
+
+    def print_register
+        $stderr.puts 'Register:'
+        $stderr.puts read_register
+        $stderr.puts
+    end
+
+    def print_tick
+        $stderr.puts "Tick: #{@tick}"
+        $stderr.puts
+    end
+
     private
+
+    def is_char? val
+        val && val >= 0 && val <= 1114111
+    end
 
     def parse(src)
         lines = src.split($/)
