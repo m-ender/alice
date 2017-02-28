@@ -114,6 +114,7 @@ class Cardinal < Mode
         
         '#'  => :trampoline,
         '$'  => :cond_trampoline,
+        '='  => :cond_sign,
 
         '~'  => :swap,
         '.'  => :dup,
@@ -144,10 +145,10 @@ class Cardinal < Mode
         'A'  => :bitand,
         'C'  => :binomial,
         'D'  => :deduplicate,
+        'E'  => :power,
         'N'  => :bitnot,
         'P'  => :factorial,
         'R'  => :negate,
-        'S'  => :sortswap,
         'T'  => :sleep,
         'V'  => :bitor,
         'X'  => :bitxor,
@@ -163,7 +164,8 @@ class Cardinal < Mode
         'k'  => :return,
         'n'  => :not,
         'p'  => :put_cell,
-        'r'  => :power,
+        'r'  => :range,
+        's'  => :sortswap,
         't'  => :dec,
 
         #'('  => ,
@@ -247,6 +249,13 @@ class Cardinal < Mode
             move
         when :cond_trampoline
             move if pop == 0
+        when :cond_sign
+            val = pop
+            if pop < 0
+                @state.dir = @state.dir.left
+            elsif pop > 0
+                @state.dir = @state.dir.right
+            end
 
         when :jump
             push_return
@@ -372,6 +381,14 @@ class Cardinal < Mode
         when :not
             push (pop == 0 ? 1 : 0)
 
+        when :range
+            val = pop
+            if val >= 0
+                0.upto(val) {|i| push i}
+            else
+                (-val).downto(0) {|i| push i}
+            end
+
         when :random
             val = pop
             if val > 0
@@ -443,6 +460,7 @@ class Ordinal < Mode
         
         '#'  => :trampoline,
         '$'  => :cond_trampoline,
+        '='  => :cond_cmp,
 
         '~'  => :swap,
         '.'  => :dup,
@@ -467,7 +485,6 @@ class Ordinal < Mode
         'N'  => :complement,
         'P'  => :permutations,
         'R'  => :reverse,
-        'S'  => :sortswap,
         'T'  => :datetime,
         'V'  => :union,
         'X'  => :symdifference,
@@ -607,6 +624,14 @@ class Ordinal < Mode
             move
         when :cond_trampoline
             move if pop == ''
+        when :cond_cmp
+            top = pop
+            second = pop
+            if top > second 
+                @state.ip += (@state.dir.reverse + @state.dir.left) / 2
+            elsif top < second
+                @state.ip += (@state.dir.reverse + @state.dir.right) / 2
+            end
 
         when :jump
             push_return
@@ -799,14 +824,6 @@ class Ordinal < Mode
                 end
             }.join + (val[-1] || '')
 
-        when :sortswap
-            top = pop
-            second = pop
-
-            top, second = second, top if top < second
-
-            push second
-            push top
 
         when :swap
             top = pop
