@@ -4,6 +4,7 @@ require_relative 'point2d'
 require_relative 'direction'
 
 require 'prime'
+require 'date'
 
 class Mode
     # List of operators which should not be ignored while in string mode.
@@ -147,6 +148,7 @@ class Cardinal < Mode
         'P'  => :factorial,
         'R'  => :negate,
         'S'  => :sortswap,
+        'T'  => :sleep,
         'V'  => :bitor,
         'X'  => :bitxor,
 
@@ -197,7 +199,7 @@ class Cardinal < Mode
             val = @state.pop
             if val.is_a?(String)
                 found = false
-                val.scan(/-?\d+/) { push $&.to_i; found = true }
+                val.scan(/(?:^|(?!\G))-?\d+/) { push $&.to_i; found = true }
                 next if !found
                 val = @state.pop
             end
@@ -401,6 +403,8 @@ class Cardinal < Mode
         when :discard
             pop
 
+        when :sleep
+            sleep pop/1000.0
         when :const_10
             push 10
         when :const_m1
@@ -464,6 +468,7 @@ class Ordinal < Mode
         'P'  => :permutations,
         'R'  => :reverse,
         'S'  => :sortswap,
+        'T'  => :datetime,
         'V'  => :union,
         'X'  => :symdifference,
 
@@ -815,6 +820,8 @@ class Ordinal < Mode
         when :discard
             pop
 
+        when :datetime
+            push DateTime.now.strftime '%Y-%m-%dT%H:%M:%S.%L%:z'
         when :const_lf
             push "\n"
         when :const_empty
