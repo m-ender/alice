@@ -13,36 +13,6 @@ class Mode
     def initialize(state)
         @state = state
     end
-    
-    def do_tick
-        move if @state.tick > 0
-
-        cmd = @state.cell
-        if @state.string_mode
-            if is_char?(cmd) && STRING_CMDS[cmd.chr]
-                case cmd.chr
-                when '"'
-                    @state.string_mode = false
-                    process_string
-                    @state.current_string = []
-                when "'"
-                    move
-                    @state.current_string << @state.cell
-                else
-                    process(self.class::OPERATORS[cmd.chr], cmd)
-                end
-            else
-                @state.current_string << cmd
-            end
-        else
-            opcode = :nop
-            opcode = self.class::OPERATORS[cmd.chr] if is_char?(cmd)
-
-            process(opcode, cmd)
-        end
-
-        @state.tick += 1
-    end
 
     def is_char? val
         val && val >= 0 && val <= 1114111
@@ -56,7 +26,32 @@ class Mode
         raise NotImplementedError
     end
 
+    # Returns true when the resulting cell is a command.
     def move
+        raw_move if @state.cell == "'".ord
+        raw_move
+
+        cell = @state.cell 
+        case cell
+        when '/'.ord, '\\'.ord
+            @state.dir = @state.dir.reflect cell.chr
+            @state.toggle_mode
+            return false
+        when '_'.ord, '|'.ord
+            @state.dir = @state.dir.reflect cell.chr
+            return false
+        end
+
+        return true if @state.string_mode
+
+        @state.print_debug_info if cell == '`'.ord
+
+        is_char?(cell) && self.class::OPERATORS.has_key?(cell.chr)
+    end
+
+    # Moves the IP a single cell without regard for mirrors, walls or no-ops.
+    # Does respect grid boundaries.
+    def raw_move
         raise NotImplementedError
     end
 
@@ -81,28 +76,11 @@ class Mode
         push val
         val
     end
-
-    def shift
-        raise NotImplementedError
-    end
-
-    def unshift val
-        @state.unshift val
-    end
-
 end
 
 class Cardinal < Mode
     OPERATORS = {
-        ' '  => :nop,
         '@'  => :terminate,
-
-        '`'  => :debug,
-
-        '/'  => :mirror,
-        '\\' => :mirror,
-        '_'  => :wall,
-        '|'  => :wall,
         
         '<'  => :move_west,
         '>'  => :move_east,
@@ -115,6 +93,7 @@ class Cardinal < Mode
         '#'  => :trampoline,
         '$'  => :cond_trampoline,
         '='  => :cond_sign,
+        '&'  => :repeat_iterator,
 
         '~'  => :swap,
         '.'  => :dup,
@@ -134,7 +113,7 @@ class Cardinal < Mode
         '('  => :search_left,
         ')'  => :search_right,
         
-        '"'  => :string_mode,
+        '"'  => :leave_string_mode,
         "'"  => :escape,
 
         'I'  => :input,
@@ -189,7 +168,7 @@ class Cardinal < Mode
 
     OPERATORS.default = :nop
 
-    def move
+    def raw_move
         @state.ip += @state.dir.vec
         @state.wrap
     end
@@ -212,27 +191,17 @@ class Cardinal < Mode
         val || 0
     end
 
-    def process_string
-        @state.stack += @state.current_string
-    end
+    def process cmd
+        opcode = OPERATORS[cmd]
 
-    def process opcode, cmd
         case opcode
+        when :nop
+            @state.print_debug_info
+            raise "No-op reached process(). This shouldn't happen."
+                
         when :terminate
             @state.done = true
-        when :debug
-            $stderr.puts 'Mode: Cardinal'
-            @state.print_grid
-            @state.print_stack
-            @state.print_tape
-            @state.print_register
-            @state.print_tick
 
-        when :mirror
-            @state.dir = @state.dir.reflect cmd.chr
-            @state.set_ordinal
-        when :wall
-            @state.dir = @state.dir.reflect cmd.chr
         when :move_east
             @state.dir = East.new
         when :move_west
@@ -256,6 +225,8 @@ class Cardinal < Mode
             elsif pop > 0
                 @state.dir = @state.dir.right
             end
+        when :repeat_iterator
+            @state.add_iterator pop
 
         when :jump
             push_return
@@ -291,11 +262,12 @@ class Cardinal < Mode
             val = pop
             @state.mp += 1 while @state.mp < @state.tape.size && @state.tape[@state.mp] != val
 
-        when :string_mode
-            @state.string_mode = true
+        when :leave_string_mode
+            @state.stack += @state.current_string
         when :escape
-            move
+            raw_move
             push @state.cell
+            @state.ip -= @state.dir
 
         when :input
             char = @state.in_str.getc
@@ -433,15 +405,7 @@ end
 
 class Ordinal < Mode
     OPERATORS = {
-        ' '  => :nop,
         '@'  => :terminate,
-
-        '`'  => :debug,
-
-        '/'  => :mirror,
-        '\\' => :mirror,
-        '_'  => :wall,
-        '|'  => :wall,
 
         '0'  => :digit, '1'  => :digit, '2'  => :digit, '3'  => :digit, '4'  => :digit, '5'  => :digit, '6'  => :digit, '7'  => :digit, '8'  => :digit, '9'  => :digit,
         '+'  => :concat,
@@ -461,6 +425,7 @@ class Ordinal < Mode
         '#'  => :trampoline,
         '$'  => :cond_trampoline,
         '='  => :cond_cmp,
+        '&'  => :fold_iterator,
 
         '~'  => :swap,
         '.'  => :dup,
@@ -471,7 +436,7 @@ class Ordinal < Mode
         '['  => :rotate_left,
         ']'  => :rotate_right,
         
-        '"'  => :string_mode,
+        '"'  => :leave_string_mode,
         "'"  => :escape,
 
         'I'  => :input,
@@ -530,7 +495,7 @@ class Ordinal < Mode
 
     OPERATORS.default = :nop
 
-    def move
+    def raw_move
         if @state.width == 1 || @state.height == 1
             return
         end
@@ -546,11 +511,6 @@ class Ordinal < Mode
         val = @state.pop
 
         val ? val.to_s : ''
-    end
-
-    def process_string
-        # Will throw an error when cell isn't a valid code point
-        push @state.current_string.map(&:chr).join
     end
 
     def scan_source label
@@ -591,23 +551,17 @@ class Ordinal < Mode
         positions
     end
 
-    def process opcode, cmd
+    def process cmd
+        opcode = OPERATORS[cmd]
+        
         case opcode
+        when :nop
+            @state.print_debug_info
+            raise "No-op reached process(). This shouldn't happen."
+                
         when :terminate
             @state.done = true
-        when :debug
-            $stderr.puts 'Mode: Ordinal'
-            @state.print_grid
-            @state.print_stack
-            @state.print_tape
-            @state.print_register
-            @state.print_tick
 
-        when :mirror
-            @state.dir = @state.dir.reflect cmd.chr
-            @state.set_cardinal
-        when :wall
-            @state.dir = @state.dir.reflect cmd.chr
         when :ensure_west
             @state.dir = @state.dir.reflect '|' if @state.dir.x > 0
         when :ensure_east
@@ -617,9 +571,9 @@ class Ordinal < Mode
         when :ensure_south
             @state.dir = @state.dir.reflect '_' if @state.dir.y < 0
         when :strafe_left
-            @state.ip += (@state.dir.reverse + @state.dir.left) / 2
+            @state.ip += (@state.dir.reverse.vec + @state.dir.left.vec) / 2
         when :strafe_right
-            @state.ip += (@state.dir.reverse + @state.dir.right) / 2
+            @state.ip += (@state.dir.reverse.vec + @state.dir.right.vec) / 2
         when :trampoline
             move
         when :cond_trampoline
@@ -628,10 +582,12 @@ class Ordinal < Mode
             top = pop
             second = pop
             if top > second 
-                @state.ip += (@state.dir.reverse + @state.dir.left) / 2
+                @state.ip += (@state.dir.reverse.vec + @state.dir.left.vec) / 2
             elsif top < second
-                @state.ip += (@state.dir.reverse + @state.dir.right) / 2
+                @state.ip += (@state.dir.reverse.vec + @state.dir.right.vec) / 2
             end
+        when :fold_iterator
+            @state.add_iterator pop
 
         when :jump
             push_return
@@ -692,11 +648,13 @@ class Ordinal < Mode
                 @state.tape.unshift char
             end
 
-        when :string_mode
-            @state.string_mode = true
+        when :leave_string_mode
+            # Will throw an error when cell isn't a valid code point
+            push @state.current_string.map(&:chr).join
         when :escape
-            move
+            raw_move
             push @state.cell.chr # Will throw an error when cell isn't a valid code point
+            @state.ip -= @state.dir
 
         when :digit
             push(pop + cmd.chr)
@@ -712,7 +670,9 @@ class Ordinal < Mode
             @state.out_str << pop
 
         when :concat
-            push(pop + pop)
+            top = pop
+            second = pop
+            push(second + top)
         when :drop
             y = pop
             x = pop

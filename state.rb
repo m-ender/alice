@@ -6,15 +6,14 @@ require_relative 'direction'
 
 class State
     # I'm sorry.
-    attr_accessor   :debug_level, :in_str, :out_str, :max_ticks,
+    attr_accessor   :in_str, :out_str, :max_ticks,
                     :grid, :height, :width,
                     :ip, :dir, :storage_offset,
                     :stack, :tape, :mp, :string_mode, :current_string,
                     :tick, :done,
                     :mode
 
-    def initialize(src, debug_level=0, in_str=$stdin, out_str=$stdout, max_ticks=-1)
-        @debug_level = debug_level
+    def initialize(src, in_str=$stdin, out_str=$stdout, max_ticks=-1)
         @in_str = in_str
         @out_str = out_str
         @max_ticks = max_ticks
@@ -23,7 +22,7 @@ class State
         @height = @grid.size
         @width = @height == 0 ? 0 : @grid[0].size
 
-        @ip = Point2D.new(0, 0)
+        @ip = Point2D.new(@width-1, 0)
         @dir = East.new
         @storage_offset = Point2D.new(0, 0) # Will be used when source modification grows the
                                             # to the West or to the North.
@@ -33,6 +32,7 @@ class State
         @string_mode = false
         @current_string = []
         @return_stack = []
+        @iterator_queue = []
 
         @tick = 0
         @done = false
@@ -149,10 +149,16 @@ class State
 
     def set_cardinal
         @mode = @cardinal
+        @other_mode = @ordinal
     end
 
     def set_ordinal
         @mode = @ordinal
+        @other_mode = @cardinal
+    end
+
+    def toggle_mode
+        @mode, @other_mode = @other_mode, @mode
     end
 
     def push val
@@ -171,12 +177,12 @@ class State
         @return_stack.pop || [0,0]
     end
 
-    def shift
-        @stack.shift
+    def get_iterator
+        @iterator_queue.shift || 1
     end
 
-    def unshift val
-        @stack.unshift val
+    def add_iterator iter
+        @iterator_queue << iter
     end
 
     def read_register
@@ -187,6 +193,16 @@ class State
             i += 1
         end
         chars.map(&:chr).join
+    end
+
+    def print_debug_info
+        $stderr.puts "Mode: #{@mode.class}"
+        print_grid
+        print_iterators
+        print_stack
+        print_tape
+        print_register
+        print_tick
     end
 
     def print_grid
@@ -202,6 +218,12 @@ class State
         $stderr.puts "IP: #{@ip.pretty}"
         $stderr.puts "Direction: #{@dir.class}"
         $stderr.puts "Return address stack: ... (0,0)#{@return_stack.map{|p|' '+p.pretty}.join}"
+        $stderr.puts
+    end
+
+    def print_iterators
+        $stderr.puts 'Iterators:'
+        $stderr.puts "<< #{@iterator_queue.empty? ? 1 : @iterator_queue.map(&:inspect).join(' ')} <<"
         $stderr.puts
     end
 
