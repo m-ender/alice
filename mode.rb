@@ -419,8 +419,8 @@ class Ordinal < Mode
         '^'  => :ensure_north,
         'v'  => :ensure_south,
 
-        '{'  => :strafe_left,
-        '}'  => :strafe_right,
+        '{'  => :turn_left,
+        '}'  => :turn_right,
         
         '#'  => :trampoline,
         '$'  => :cond_trampoline,
@@ -570,10 +570,10 @@ class Ordinal < Mode
             @state.dir = @state.dir.reflect '_' if @state.dir.y > 0
         when :ensure_south
             @state.dir = @state.dir.reflect '_' if @state.dir.y < 0
-        when :strafe_left
-            @state.ip += (@state.dir.reverse.vec + @state.dir.left.vec) / 2
-        when :strafe_right
-            @state.ip += (@state.dir.reverse.vec + @state.dir.right.vec) / 2
+        when :turn_left
+            @state.dir = @state.dir.left
+        when :turn_right
+            @state.dir = @state.dir.right
         when :trampoline
             move
         when :cond_trampoline
@@ -582,9 +582,9 @@ class Ordinal < Mode
             top = pop
             second = pop
             if top > second 
-                @state.ip += (@state.dir.reverse.vec + @state.dir.left.vec) / 2
+                @state.dir = @state.dir.left
             elsif top < second
-                @state.ip += (@state.dir.reverse.vec + @state.dir.right.vec) / 2
+                @state.dir = @state.dir.right
             end
         when :fold_iterator
             @state.add_iterator pop
