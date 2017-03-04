@@ -135,6 +135,7 @@ class Cardinal < Mode
         'a'  => :const_10,
         'b'  => :random,
         'c'  => :prime_factors,
+        'd'  => :stack_depth,
         'e'  => :const_m1,
         'f'  => :prime_factor_pairs,
         'g'  => :get_cell,
@@ -146,24 +147,6 @@ class Cardinal < Mode
         'r'  => :range,
         's'  => :sortswap,
         't'  => :dec,
-
-        #'('  => ,
-        #')'  => ,
-
-        #'!'  => ,
-        #'$'  => ,
-        #'&'  => ,
-        #','  => ,
-        #'.'  => ,
-        #';'  => ,
-        #'='  => ,
-
-        #'A'  => ,
-        # ...
-        #'Z'  => ,
-        #'a'  => ,
-        # ...
-        #'z'  => ,
     }
 
     OPERATORS.default = :nop
@@ -267,7 +250,7 @@ class Cardinal < Mode
         when :escape
             raw_move
             push @state.cell
-            @state.ip -= @state.dir
+            @state.ip -= @state.dir.vec
 
         when :input
             char = @state.in_str.getc
@@ -391,6 +374,8 @@ class Cardinal < Mode
             push top
         when :discard
             pop
+        when :stack_depth
+            push @state.stack.size
 
         when :sleep
             sleep pop/1000.0
@@ -450,6 +435,7 @@ class Ordinal < Mode
         'N'  => :complement,
         'P'  => :permutations,
         'R'  => :reverse,
+        'S'  => :replace,
         'T'  => :datetime,
         'V'  => :union,
         'X'  => :symdifference,
@@ -654,7 +640,7 @@ class Ordinal < Mode
         when :escape
             raw_move
             push @state.cell.chr # Will throw an error when cell isn't a valid code point
-            @state.ip -= @state.dir
+            @state.ip -= @state.dir.vec
 
         when :digit
             push(pop + cmd.chr)
@@ -690,7 +676,11 @@ class Ordinal < Mode
         when :split
             sep = pop
             @state.stack += pop.split(sep, -1)
-
+        when :replace
+            target = pop
+            needle = pop
+            haystack = pop
+            push haystack.gsub(needle, target)
         when :intersection
             second = pop
             first = pop
