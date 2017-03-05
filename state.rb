@@ -9,7 +9,7 @@ class State
     attr_accessor   :in_str, :out_str, :max_ticks,
                     :grid, :height, :width,
                     :ip, :dir, :storage_offset,
-                    :stack, :tape, :mp, :string_mode, :current_string,
+                    :stack, :tape, :rp, :mp, :string_mode, :current_string, 
                     :tick, :done,
                     :mode
 
@@ -22,13 +22,14 @@ class State
         @height = @grid.size
         @width = @height == 0 ? 0 : @grid[0].size
 
-        @ip = Point2D.new(@width-1, 0)
+        @ip = Point2D.new(@width-1, 0) # Instruction pointer
         @dir = East.new
         @storage_offset = Point2D.new(0, 0) # Will be used when source modification grows the
                                             # to the West or to the North.
         @stack = []
-        @tape = []
-        @mp = 0
+        @tape = Hash.new(-1)
+        @mp = 0 # Memory pointer
+        @rp = 0 # Register pointer
         @string_mode = false
         @current_string = []
         @return_stack = []
@@ -187,7 +188,7 @@ class State
 
     def read_register
         chars = []
-        i = 0
+        i = @rp
         while is_char?(@tape[i])
             chars << @tape[i]
             i += 1
@@ -223,21 +224,27 @@ class State
 
     def print_iterators
         $stderr.puts 'Iterators:'
-        $stderr.puts "<< #{@iterator_queue.empty? ? 1 : @iterator_queue.map(&:inspect).join(' ')} <<"
+        $stderr.puts "<< #{@iterator_queue.empty? ? '(1)' : @iterator_queue.map(&:inspect).join(' ')} <<"
         $stderr.puts
     end
 
     def print_tape
         $stderr.puts 'Tape:'
-        pos = [(@mp - @tape.size)*3,0].max
-        width = 2
-        @tape.each_with_index do |elem, i|
-            $stderr << elem << ' '
-            pos += elem.to_s.size+1 if i < @mp
-            width = elem.to_s.size if i == @mp
+        min, max = [@mp, @rp, *@tape.keys].minmax
+        width = 0
+        rp_str = "RP:"
+        tape_str = "..."
+        mp_str = "MP:"
+        (min-1 .. max+1).map do |i|
+            s = @tape[i].to_s
+            tape_str << ' ' << s
+            rp_str << ' ' << (i == @rp ? 'v'*s.size + " (#{i})" : ' '*s.size)
+            mp_str << ' ' << (i == @mp ? '^'*s.size + " (#{i})" : ' '*s.size)
         end
-        $stderr.puts "#{'-1 '*[1, @mp-@tape.size+1].max}..."
-        $stderr.puts ' '*pos + '^'*width
+        tape_str << ' ...'
+        $stderr.puts rp_str
+        $stderr.puts tape_str
+        $stderr.puts mp_str
         $stderr.puts
     end
 

@@ -235,16 +235,15 @@ class Cardinal < Mode
         when :load_tape
             push (@state.tape[@state.mp] || -1)
         when :mp_left
-            @state.mp -= 1 if @state.mp > 0
+            @state.mp -= 1
         when :mp_right
             @state.mp += 1
         when :search_left
             val = pop
-            @state.mp -= 1 while @state.mp > 0 && @state.tape[@state.mp] != val
+            @state.mp -= 1 while @state.tape[@state.mp] != val
         when :search_right
-            @state.tape.pop while @state.tape[-1] == -1
             val = pop
-            @state.mp += 1 while @state.mp < @state.tape.size && @state.tape[@state.mp] != val
+            @state.mp += 1 while @state.tape[@state.mp] != val
 
         when :leave_string_mode
             @state.stack += @state.current_string
@@ -435,9 +434,11 @@ class Ordinal < Mode
 
         '!'  => :store_register,
         '?'  => :load_register,
-        '['  => :rotate_left,
-        ']'  => :rotate_right,
-        
+        '['  => :register_left,
+        ']'  => :register_right,
+        '('  => :search_left,
+        ')'  => :search_right,
+
         '"'  => :leave_string_mode,
         "'"  => :escape,
 
@@ -629,7 +630,7 @@ class Ordinal < Mode
             end
 
         when :store_register
-            i = 0
+            i = @state.rp
             pop.each_char do |c|
                 @state.tape[i] = c.ord
                 i += 1
@@ -638,22 +639,49 @@ class Ordinal < Mode
         when :load_register
             push @state.read_register
 
-        when :rotate_left
-            first = @state.tape[0]
+        when :register_left
+            @state.rp -= 1 while is_char? @state.tape[@state.rp-1]
+            @state.rp -= 1
+            @state.rp -= 1 while is_char? @state.tape[@state.rp-1]
 
-            if is_char?(first)
-                @state.tape.shift
-                last = 0
-                last += 1 while is_char?(@state.tape[last])
-                @state.tape.insert(last, first)
+        when :register_right
+            @state.rp += 1 while is_char? @state.tape[@state.rp]
+            @state.rp += 1
+
+        when :search_left
+            needle = pop
+            last = @state.rp
+            string = ""
+
+            @state.tape.keys.select{|i| i < @state.rp}.sort.reverse.map do |i|
+                if i+1 == last && is_char?(@state.tape[i])
+                    string << @state.tape[i]
+                elsif string.reverse[needle]
+                    @state.rp = last
+                    break
+                else
+                    string = ""
+                end
+                last = i
             end
-        when :rotate_right
-            if is_char?(@state.tape[0])
-                last = 0
-                last += 1 while is_char?(@state.tape[last+1])
-                char = @state.tape.delete_at(last)
-                @state.tape.unshift char
+
+        when :search_right
+            needle = pop
+            last = @state.rp-1
+            string = ""
+
+            @state.tape.keys.select{|i| i >= @state.rp}.sort.map do |i|
+                if i-1 == last && is_char?(@state.tape[i])
+                    string << @state.tape[i]
+                elsif string[needle]
+                    @state.rp = last - string.size + 1
+                    break
+                else
+                    string = ""
+                end
+                last = i
             end
+
 
         when :leave_string_mode
             # Will throw an error when cell isn't a valid code point
