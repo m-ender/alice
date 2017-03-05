@@ -449,6 +449,7 @@ class Ordinal < Mode
         'A'  => :intersection,
         'C'  => :subsequences,
         'D'  => :deduplicate,
+        'F'  => :find,
         'H'  => :trim,
         'L'  => :transliterate,
         'N'  => :complement,
@@ -720,6 +721,10 @@ class Ordinal < Mode
             (0...width).map do |i|
                 lines.map{|l| l[i] || ''}.join
             end.join $/
+        when :find
+            needle = pop
+            haystack = pop
+            push(haystack[needle] || '')
 
         when :intersection
             second = pop
