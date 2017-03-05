@@ -146,6 +146,7 @@ class Cardinal < Mode
         'k'  => :return,
         'n'  => :not,
         'p'  => :put_cell,
+        'q'  => :get_mp,
         'r'  => :range,
         's'  => :sortswap,
         't'  => :dec,
@@ -244,6 +245,8 @@ class Cardinal < Mode
         when :search_right
             val = pop
             @state.mp += 1 while @state.tape[@state.mp] != val
+        when :get_mp
+            push @state.mp
 
         when :leave_string_mode
             @state.stack += @state.current_string
@@ -475,6 +478,7 @@ class Ordinal < Mode
         'u'  => :upper_case,
         'n'  => :not,
         'p'  => :put_diagonal,
+        'q'  => :join_tape,
         'r'  => :expand_ranges,
         's'  => :sort,
         't'  => :tail,
@@ -638,16 +642,13 @@ class Ordinal < Mode
             @state.tape[i] = -1
         when :load_register
             push @state.read_register
-
         when :register_left
             @state.rp -= 1 while is_char? @state.tape[@state.rp-1]
             @state.rp -= 1
             @state.rp -= 1 while is_char? @state.tape[@state.rp-1]
-
         when :register_right
             @state.rp += 1 while is_char? @state.tape[@state.rp]
             @state.rp += 1
-
         when :search_left
             needle = pop
             last = @state.rp
@@ -664,7 +665,6 @@ class Ordinal < Mode
                 end
                 last = i
             end
-
         when :search_right
             needle = pop
             last = @state.rp-1
@@ -681,7 +681,8 @@ class Ordinal < Mode
                 end
                 last = i
             end
-
+        when :join_tape
+            push @state.tape.keys.sort.map{|i| @state.tape[i]}.select{|v| is_char?(v)}.map(&:chr).join
 
         when :leave_string_mode
             # Will throw an error when cell isn't a valid code point
