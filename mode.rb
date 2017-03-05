@@ -202,11 +202,11 @@ class Cardinal < Mode
             move
         when :cond_trampoline
             move if pop == 0
-        when :cond_sign
+        when :cond_sign            
             val = pop
-            if pop < 0
+            if val < 0
                 @state.dir = @state.dir.left
-            elsif pop > 0
+            elsif val > 0
                 @state.dir = @state.dir.right
             end
         when :repeat_iterator
