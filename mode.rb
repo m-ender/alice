@@ -98,6 +98,7 @@ class Cardinal < Mode
         '~'  => :swap,
         '.'  => :dup,
         ';'  => :discard,
+        ','  => :rotate_stack,
 
         '0'  => :digit, '1'  => :digit, '2'  => :digit, '3'  => :digit, '4'  => :digit, '5'  => :digit, '6'  => :digit, '7'  => :digit, '8'  => :digit, '9'  => :digit,
         '+'  => :add,
@@ -379,7 +380,20 @@ class Cardinal < Mode
             pop
         when :stack_depth
             push @state.stack.size
-
+        when :rotate_stack
+            n = pop
+            if n > 0
+                if n >= @state.stack.size
+                    push 0
+                else
+                    push @state.stack[-n-1]
+                    @state.stack.delete_at(-n-2)
+                end
+            elsif n < 0
+                top = pop
+                @state.stack = [0]*[-n-@state.stack.size, 0].max + @state.stack
+                @state.stack.insert(n-1, top)
+            end
         when :sleep
             sleep pop/1000.0
         when :const_10
@@ -418,6 +432,7 @@ class Ordinal < Mode
         '~'  => :swap,
         '.'  => :dup,
         ';'  => :discard,
+        ','  => :reverse_stack,
 
         '!'  => :store_register,
         '?'  => :load_register,
@@ -815,6 +830,8 @@ class Ordinal < Mode
             pop
         when :push_joined_stack
             push @state.stack.join
+        when :reverse_stack
+            @state.stack.reverse!
 
         when :datetime
             push DateTime.now.strftime '%Y-%m-%dT%H:%M:%S.%L%:z'
