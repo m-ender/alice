@@ -569,13 +569,13 @@ class Ordinal < Mode
             @state.done = true
 
         when :ensure_west
-            @state.dir = @state.dir.reflect '|' if @state.dir.x > 0
+            @state.dir = @state.dir.reflect '|' if @state.dir.vec.x > 0
         when :ensure_east
-            @state.dir = @state.dir.reflect '|' if @state.dir.x < 0
+            @state.dir = @state.dir.reflect '|' if @state.dir.vec.x < 0
         when :ensure_north
-            @state.dir = @state.dir.reflect '_' if @state.dir.y > 0
+            @state.dir = @state.dir.reflect '_' if @state.dir.vec.y > 0
         when :ensure_south
-            @state.dir = @state.dir.reflect '_' if @state.dir.y < 0
+            @state.dir = @state.dir.reflect '_' if @state.dir.vec.y < 0
         when :turn_left
             @state.dir = @state.dir.left
         when :turn_right
