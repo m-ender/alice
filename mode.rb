@@ -181,7 +181,6 @@ class Cardinal < Mode
 
         case opcode
         when :nop
-            @state.print_debug_info
             raise "No-op reached process(). This shouldn't happen."
                 
         when :terminate
@@ -564,7 +563,6 @@ class Ordinal < Mode
         
         case opcode
         when :nop
-            @state.print_debug_info
             raise "No-op reached process(). This shouldn't happen."
                 
         when :terminate

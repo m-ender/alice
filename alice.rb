@@ -6,8 +6,10 @@ Encoding.default_external = Encoding::UTF_8
 require_relative 'state'
 
 class Alice
+    attr_accessor :state
 
     class ProgramError < Exception; end
+
 
     def self.run(src, in_str=$stdin, out_str=$stdout, max_ticks=-1)
         new(src, in_str, out_str, max_ticks).run
