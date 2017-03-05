@@ -125,6 +125,7 @@ class Cardinal < Mode
         'C'  => :binomial,
         'D'  => :deduplicate,
         'E'  => :power,
+        'M'  => :abs,
         'N'  => :bitnot,
         'P'  => :factorial,
         'R'  => :negate,
@@ -282,6 +283,8 @@ class Cardinal < Mode
             push(pop+1)
         when :dec
             push(pop-1)
+        when :abs
+            push(pop.abs)
         when :power
             y = pop
             x = pop
@@ -432,6 +435,8 @@ class Ordinal < Mode
         'A'  => :intersection,
         'C'  => :subsequences,
         'D'  => :deduplicate,
+        'H'  => :trim,
+        'L'  => :transliterate,
         'N'  => :complement,
         'P'  => :permutations,
         'R'  => :reverse,
@@ -443,6 +448,7 @@ class Ordinal < Mode
         'a'  => :const_lf,
         'b'  => :shuffle,
         'c'  => :characters,
+        'd'  => :push_joined_stack,
         'e'  => :const_empty,
         'f'  => :runs,
         'g'  => :get_diagonal,
@@ -457,6 +463,7 @@ class Ordinal < Mode
         's'  => :sort,
         't'  => :tail,
         'x'  => :swap_case,
+        'z'  => :transpose,
 
         #'('  => ,
         #')'  => ,
@@ -681,6 +688,26 @@ class Ordinal < Mode
             needle = pop
             haystack = pop
             push haystack.gsub(needle, target)
+        when :trim
+            push pop.gsub(/^[ \n\t]+|[ \n\t]+$/, '')
+        when :transliterate
+            target = pop
+            source = pop
+            string = pop
+            if target.empty?
+                source.each_char {|c| string.gsub!(c, '')}
+            else
+                target += target[-1]*[source.size-target.size,0].max
+                string = string.chars.map{|c| target[source.index c]}.join
+            end
+            push string
+        when :transpose
+            lines = pop.lines
+            width = lines.map(&:size).max
+            (0...width).map do |i|
+                lines.map{|l| l[i] || ''}.join
+            end.join $/
+
         when :intersection
             second = pop
             first = pop
@@ -786,6 +813,8 @@ class Ordinal < Mode
             push top
         when :discard
             pop
+        when :push_joined_stack
+            push @state.stack.join
 
         when :datetime
             push DateTime.now.strftime '%Y-%m-%dT%H:%M:%S.%L%:z'
