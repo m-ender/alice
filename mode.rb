@@ -126,7 +126,9 @@ class Cardinal < Mode
         'C'  => :binomial,
         'D'  => :deduplicate,
         'E'  => :power,
-        'M'  => :abs,
+        'F'  => :divides,
+        'H'  => :abs,
+        'M'  => :divmod,
         'N'  => :bitnot,
         'P'  => :factorial,
         'R'  => :negate,
@@ -281,6 +283,11 @@ class Cardinal < Mode
         when :mod
             y = pop
             push(pop % y)
+        when :divmod
+            y = pop
+            x = pop
+            push(x / y)
+            push(x % y)
         when :inc
             push(pop+1)
         when :dec
@@ -337,6 +344,14 @@ class Cardinal < Mode
             Prime.prime_division(pop).flatten.each{ |x| push x }
         when :deduplicate
             Prime.int_from_prime_division(Prime.prime_division(pop.map{ |p,n| [p,1]}))
+        when :divides
+            y = pop
+            x = pop
+            if x % y == 0
+                push y
+            else
+                push 0
+            end
 
         when :not
             push (pop == 0 ? 1 : 0)
@@ -414,8 +429,8 @@ class Ordinal < Mode
         '+'  => :concat,
         '-'  => :drop,
         '*'  => :riffle,
-        ':'  => :split,
-        # '%'  => :mod,
+        ':'  => :occurrences,
+        '%'  => :split,
 
         '<'  => :ensure_west,
         '>'  => :ensure_east,
@@ -453,9 +468,11 @@ class Ordinal < Mode
         'A'  => :intersection,
         'C'  => :subsequences,
         'D'  => :deduplicate,
+        'E'  => :substrings,
         'F'  => :find,
         'H'  => :trim,
         'L'  => :transliterate,
+        'M'  => :inclusive_split,
         'N'  => :complement,
         'P'  => :permutations,
         'R'  => :reverse,
@@ -482,7 +499,6 @@ class Ordinal < Mode
         'r'  => :expand_ranges,
         's'  => :sort,
         't'  => :tail,
-        'x'  => :swap_case,
         'z'  => :transpose,
 
         #'('  => ,
@@ -723,9 +739,18 @@ class Ordinal < Mode
         when :riffle
             sep = pop
             push(pop.chars * sep)
+        when :occurrences
+            sep = pop
+            pop.scan(/#{sep}/){ push sep }
         when :split
             sep = pop
             @state.stack += pop.split(sep, -1)
+        when :inclusive_split
+            sep = pop
+            str = pop
+            splits = str.split(sep, -1)
+            str.scan(/#{sep}/){ push splits.shift; push sep }
+            push splits.shift
         when :replace
             target = pop
             needle = pop
@@ -836,6 +861,11 @@ class Ordinal < Mode
             str = pop.chars
             (0..str.size).each do |l|
                 str.combination(l).each {|s| push s.join}
+            end
+        when :substrings
+            str = pop.chars
+            (1..str.size).each do |l|
+                str.each_cons(l).each {|s| push s.join}
             end
 
         when :expand_ranges
