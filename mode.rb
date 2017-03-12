@@ -146,12 +146,15 @@ class Cardinal < Mode
         'h'  => :inc,
         'j'  => :jump,
         'k'  => :return,
+        'l'  => :clear_bits,
+        'm'  => :floor,
         'n'  => :not,
         'p'  => :put_cell,
         'q'  => :get_mp,
         'r'  => :range,
         's'  => :sortswap,
         't'  => :dec,
+        'u'  => :set_bits,
     }
 
     OPERATORS.default = :nop
@@ -310,6 +313,28 @@ class Cardinal < Mode
             push(pop | pop)
         when :bitxor
             push(pop ^ pop)
+        when :clear_bits
+            x = pop
+            if x > 0
+                msb = Math.log2(x).floor
+            elsif x < -1
+                msb = Math.log2(~x).floor
+            else
+                msb = 0
+            end
+            push (x & -(2**msb))
+
+        when :set_bits
+            x = pop
+            if x > 0
+                msb = Math.log2(x).floor
+            elsif x < -1
+                msb = Math.log2(~x).floor
+            else
+                msb = 0
+            end
+            push (x | (2**msb-1))
+
         when :factorial
             val = pop
             if val >= 0
@@ -352,6 +377,10 @@ class Cardinal < Mode
             else
                 push 0
             end
+        when :floor
+            y = pop
+            x = pop
+            push (x/y)*y
 
         when :not
             push (pop == 0 ? 1 : 0)
@@ -480,6 +509,7 @@ class Ordinal < Mode
         'T'  => :datetime,
         'V'  => :union,
         'X'  => :symdifference,
+        'Z'  => :zip,
 
         'a'  => :const_lf,
         'b'  => :shuffle,
@@ -492,6 +522,7 @@ class Ordinal < Mode
         'j'  => :jump,
         'k'  => :return,
         'l'  => :lower_case,
+        'm'  => :truncate_to_shorter,
         'u'  => :upper_case,
         'n'  => :not,
         'p'  => :put_diagonal,
@@ -779,6 +810,21 @@ class Ordinal < Mode
             needle = pop
             haystack = pop
             push(haystack[needle] || '')
+        when :truncate_to_shorter
+            top = pop
+            second = pop
+            length = [top.size, second.size].min
+            push second[0,length]
+            push top[0,length]
+        when :zip
+            top = pop.chars
+            second = pop.chars
+            result = []
+            while !top.empty? || !second.empty?
+                result << (second.shift || '')
+                result << (top.shift || '')
+            end
+            push result * ''
 
         when :intersection
             second = pop
