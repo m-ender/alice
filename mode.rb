@@ -127,7 +127,9 @@ class Cardinal < Mode
         'D'  => :deduplicate,
         'E'  => :power,
         'F'  => :divides,
+        'G'  => :gcd,
         'H'  => :abs,
+        'L'  => :lcm,
         'M'  => :divmod,
         'N'  => :bitnot,
         'P'  => :factorial,
@@ -377,6 +379,10 @@ class Cardinal < Mode
             else
                 push 0
             end
+        when :gcd
+            push (pop.gcd pop)
+        when :lcm
+            push (pop.lcm pop)
         when :floor
             y = pop
             x = pop
@@ -499,8 +505,9 @@ class Ordinal < Mode
         'D'  => :deduplicate,
         'E'  => :substrings,
         'F'  => :find,
+        'G'  => :longest_common_substring,
         'H'  => :trim,
-        'L'  => :transliterate,
+        'L'  => :shortest_common_superstring,
         'M'  => :inclusive_split,
         'N'  => :complement,
         'P'  => :permutations,
@@ -530,6 +537,7 @@ class Ordinal < Mode
         'r'  => :expand_ranges,
         's'  => :sort,
         't'  => :tail,
+        'y'  => :transliterate,
         'z'  => :transpose,
 
         #'('  => ,
@@ -825,6 +833,30 @@ class Ordinal < Mode
                 result << (top.shift || '')
             end
             push result * ''
+        when :shortest_common_superstring
+            top = pop
+            second = pop
+            len = [top.size, second.size].min
+            len.downto(0) do |i|
+                if second[-i,i] == top[0,i]
+                    push second+top[i..-1]
+                    break
+                end
+            end
+        when :longest_common_substring
+            top = pop
+            second = pop
+            second.size.downto(0) do |l|
+                if l == 0
+                    push ""
+                else
+                    shared = second.chars.each_cons(l).select {|s| top[s.join]}
+                    if !shared.empty?
+                        shared.uniq.each{|s| push s.join}
+                        break
+                    end
+                end
+            end            
 
         when :intersection
             second = pop
