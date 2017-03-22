@@ -170,8 +170,8 @@ class State
         @stack.pop
     end
 
-    def push_return
-        @return_stack.push([@ip.x, @ip.y])
+    def push_return(coords=@ip)
+        @return_stack.push([coords.x, coords.y])
     end
 
     def pop_return

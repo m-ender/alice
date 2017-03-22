@@ -129,6 +129,8 @@ class Cardinal < Mode
         'F'  => :divides,
         'G'  => :gcd,
         'H'  => :abs,
+        'J'  => :jump_raw,
+        'K'  => :return_raw,
         'L'  => :lcm,
         'M'  => :divmod,
         'N'  => :bitnot,
@@ -136,6 +138,7 @@ class Cardinal < Mode
         'R'  => :negate,
         'T'  => :sleep,
         'V'  => :bitor,
+        'W'  => :discard_return
         'X'  => :bitxor,
 
         'a'  => :const_10,
@@ -157,6 +160,7 @@ class Cardinal < Mode
         's'  => :sortswap,
         't'  => :dec,
         'u'  => :set_bits,
+        'w'  => :push_return
     }
 
     OPERATORS.default = :nop
@@ -227,6 +231,18 @@ class Cardinal < Mode
             @state.jump(x,y)
         when :return
             @state.jump(*pop_return)
+        when :jump_raw
+            y = pop
+            x = pop
+            @state.jump(x,y)
+        when :return_raw
+            target = pop_return
+            push_return target
+            @state.jump(*target)
+        when :push_return
+            push_return
+        when :discard_return
+            pop_return
 
         when :get_cell
             y = pop
@@ -507,6 +523,8 @@ class Ordinal < Mode
         'F'  => :find,
         'G'  => :longest_common_substring,
         'H'  => :trim,
+        'J'  => :jump_raw,
+        'K'  => :return_raw,
         'L'  => :shortest_common_superstring,
         'M'  => :inclusive_split,
         'N'  => :complement,
@@ -515,6 +533,7 @@ class Ordinal < Mode
         'S'  => :replace,
         'T'  => :datetime,
         'V'  => :union,
+        'W'  => :discard_return,
         'X'  => :symdifference,
         'Z'  => :zip,
 
@@ -537,6 +556,7 @@ class Ordinal < Mode
         'r'  => :expand_ranges,
         's'  => :sort,
         't'  => :tail,
+        'w'  => :push_return,
         'y'  => :transliterate,
         'z'  => :transpose,
 
@@ -663,6 +683,18 @@ class Ordinal < Mode
             @state.jump(*positions[0]) if !positions.empty?
         when :return
             @state.jump(*pop_return)
+        when :jump_raw
+            label = pop
+            positions = scan_source(label)
+            @state.jump(*positions[0]) if !positions.empty?
+        when :return_raw
+            target = pop_return
+            push_return target
+            @state.jump(*target)
+        when :push_return
+            push_return
+        when :discard_return
+            pop_return
 
         when :get_diagonal
             label = pop
