@@ -622,7 +622,7 @@ class Ordinal < Mode
                 grid[y][x].chr
             end.join
 
-            line.scan(/(?=#{label})/) do
+            line.scan(/(?=#{Regexp.escape(label)})/) do
                 x = min_x + $`.size + label.size - 1
                 y = d-x
                 positions << [x,y]
@@ -800,7 +800,7 @@ class Ordinal < Mode
             y = pop
             x = pop
             result = x.chars
-            x.scan(/(?=#{y})/) do
+            x.scan(/(?=#{Regexp.escape(y)})/) do
                 y.size.times do |i|
                     result[$`.size + i] = 0
                 end
@@ -812,7 +812,7 @@ class Ordinal < Mode
             push(pop.chars * sep)
         when :occurrences
             sep = pop
-            pop.scan(/#{sep}/){ push sep }
+            pop.scan(/#{Regexp.escape(sep)}/){ push sep }
         when :split
             sep = pop
             @state.stack += pop.split(sep, -1)
@@ -820,7 +820,7 @@ class Ordinal < Mode
             sep = pop
             str = pop
             splits = str.split(sep, -1)
-            str.scan(/#{sep}/){ push splits.shift; push sep }
+            str.scan(/#{Regexp.escape(sep)}/){ push splits.shift; push sep }
             push splits.shift
         when :replace
             target = pop
