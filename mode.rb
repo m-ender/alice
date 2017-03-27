@@ -138,7 +138,7 @@ class Cardinal < Mode
         'R'  => :negate,
         'T'  => :sleep,
         'V'  => :bitor,
-        'W'  => :discard_return
+        'W'  => :discard_return,
         'X'  => :bitxor,
 
         'a'  => :const_10,

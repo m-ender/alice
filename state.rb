@@ -210,7 +210,7 @@ class State
         $stderr.puts 'Grid:'
         $stderr.puts ' '*(@ip.x+@storage_offset.x)+'v'
         @grid.each_with_index do |line, i|
-            line.each {|c| $stderr << (is_char?(c) ? c : 0).chr}
+            line.each {|c| $stderr << (is_char?(c) && (c == 10 || c >= 32) ? c : 32).chr}
             $stderr << ' <' if i == @ip.y + @storage_offset.y
             $stderr.puts
         end
