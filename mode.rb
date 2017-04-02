@@ -356,8 +356,19 @@ class Cardinal < Mode
         when :extract_bit
             y = pop
             x = pop
-            push x[y]
-            
+            if y >= 0
+                push x[y]
+            else
+                if x > 0
+                    msb = Math.log2(x).floor
+                elsif x < -1
+                    msb = Math.log2(~x).floor
+                else
+                    msb = 0
+                end
+                push x[msb-y+1]
+            end
+
         when :factorial
             val = pop
             if val >= 0
