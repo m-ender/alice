@@ -135,6 +135,7 @@ class Cardinal < Mode
         'M'  => :divmod,
         'N'  => :bitnot,
         'P'  => :factorial,
+        'Q'  => :convert,
         'R'  => :negate,
         'T'  => :sleep,
         'V'  => :bitor,
@@ -161,6 +162,7 @@ class Cardinal < Mode
         't'  => :dec,
         'u'  => :set_bits,
         'w'  => :push_return
+        'x'  => :extract_bit
     }
 
     OPERATORS.default = :nop
@@ -341,7 +343,6 @@ class Cardinal < Mode
                 msb = 0
             end
             push (x & -(2**msb))
-
         when :set_bits
             x = pop
             if x > 0
@@ -352,7 +353,11 @@ class Cardinal < Mode
                 msb = 0
             end
             push (x | (2**msb-1))
-
+        when :extract_bit
+            y = pop
+            x = pop
+            push x[y]
+            
         when :factorial
             val = pop
             if val >= 0
@@ -461,6 +466,9 @@ class Cardinal < Mode
                 @state.stack = [0]*[-n-@state.stack.size, 0].max + @state.stack
                 @state.stack.insert(n-1, top)
             end
+        when :convert
+            n = pop
+            n.times.map{pop}.reverse.each{|v| push v}
         when :sleep
             sleep pop/1000.0
         when :const_10
@@ -499,7 +507,7 @@ class Ordinal < Mode
         '~'  => :swap,
         '.'  => :dup,
         ';'  => :discard,
-        ','  => :reverse_stack,
+        ','  => :permute_stack,
 
         '!'  => :store_register,
         '?'  => :load_register,
@@ -529,6 +537,7 @@ class Ordinal < Mode
         'M'  => :inclusive_split,
         'N'  => :complement,
         'P'  => :permutations,
+        'Q'  => :reverse_stack,
         'R'  => :reverse,
         'S'  => :replace,
         'T'  => :datetime,
@@ -557,6 +566,7 @@ class Ordinal < Mode
         's'  => :sort,
         't'  => :tail,
         'w'  => :push_return,
+        'x'  => :permute,
         'y'  => :transliterate,
         'z'  => :transpose,
 
@@ -977,6 +987,14 @@ class Ordinal < Mode
             (1..str.size).each do |l|
                 str.each_cons(l).each {|s| push s.join}
             end
+        when :permute
+            top = pop
+            second = pop
+            push (0...second.size).stable_sort_by{|i| 
+                c = top[i]
+                c ? c.ord : 1114112 # Value greater than any code point, so that trailing
+                                    # characters remain in place.
+            }.map{|i| second[i]}.join
 
         when :expand_ranges
             val = pop
@@ -1003,7 +1021,15 @@ class Ordinal < Mode
         when :push_joined_stack
             push @state.stack.join
         when :reverse_stack
-            @state.stack.reverse!
+            @state.stack.reverse!.map!(:to_s)
+        when :permute_stack
+            top = pop
+            max_size = [@state.stack.size, top.size].max
+            @state.stack = (-max_size..-1).stable_sort_by{|i| 
+                c = top[i]
+                c ? c.ord : -1 # Value less than any code point, so that leading
+                               # stack elements remain in place.
+            }.map{|i| @state.stack[i] || ''}
 
         when :datetime
             push DateTime.now.strftime '%Y-%m-%dT%H:%M:%S.%L%:z'
