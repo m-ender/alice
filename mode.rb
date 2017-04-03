@@ -137,6 +137,7 @@ class Cardinal < Mode
         'P'  => :factorial,
         'Q'  => :convert,
         'R'  => :negate,
+        'S'  => :replace_divisors,
         'T'  => :sleep,
         'V'  => :bitor,
         'W'  => :discard_return,
@@ -161,8 +162,10 @@ class Cardinal < Mode
         's'  => :sortswap,
         't'  => :dec,
         'u'  => :set_bits,
-        'w'  => :push_return
-        'x'  => :extract_bit
+        'w'  => :push_return,
+        'x'  => :extract_bit,
+        'y'  => :bit_if,
+        'z'  => :transpose_ip,
     }
 
     OPERATORS.default = :nop
@@ -225,6 +228,18 @@ class Cardinal < Mode
             end
         when :repeat_iterator
             @state.add_iterator pop
+        when :transpose_ip
+            @state.jump(@state.ip.y, @state.ip.x)
+            case @state.dir
+            when East
+                @state.dir = South.new
+            when West
+                @state.dir = North.new
+            when South
+                @state.dir = East.new
+            when North
+                @state.dir = West.new
+            end
 
         when :jump
             push_return
@@ -333,6 +348,11 @@ class Cardinal < Mode
             push(pop | pop)
         when :bitxor
             push(pop ^ pop)
+        when :bitif
+            z = pop
+            y = pop
+            x = pop
+            push(x&y | ~x&z)
         when :clear_bits
             x = pop
             if x > 0
@@ -419,6 +439,20 @@ class Cardinal < Mode
             y = pop
             x = pop
             push (x/y)*y
+        when :replace_divisors
+            z = pop
+            y = pop
+            x = pop
+            if x == 0
+                push 0
+            else
+                order = 0
+                while x%y == 0
+                    order += 1 
+                    x /= y
+                end
+                x *= z**order
+            end
 
         when :not
             push (pop == 0 ? 1 : 0)
