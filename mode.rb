@@ -589,6 +589,7 @@ class Ordinal < Mode
         'V'  => :union,
         'W'  => :discard_return,
         'X'  => :symdifference,
+        'Y'  => :unzip,
         'Z'  => :zip,
 
         'a'  => :const_lf,
@@ -920,6 +921,17 @@ class Ordinal < Mode
                 result << (top.shift || '')
             end
             push result * ''
+        when :unzip
+            str = pop
+            left = ''
+            right = ''
+            str.scan(/(.)(.|$)/s) do
+                left << $1
+                right << $2
+            end
+            push left
+            push right
+
         when :shortest_common_superstring
             top = pop
             second = pop
@@ -991,7 +1003,7 @@ class Ordinal < Mode
             pop.scan(/(.)\1*/s){push $&}
         when :head
             str = pop
-            if pop == ''
+            if str == ''
                 push ''
                 push ''
             else
@@ -1000,7 +1012,7 @@ class Ordinal < Mode
             end
         when :tail
             str = pop
-            if pop == ''
+            if str == ''
                 push ''
                 push ''
             else
