@@ -142,6 +142,8 @@ class Cardinal < Mode
         'V'  => :bitor,
         'W'  => :discard_return,
         'X'  => :bitxor,
+        'Y'  => :unpack,
+        'Z'  => :pack,
 
         'a'  => :const_10,
         'b'  => :random,
@@ -453,6 +455,48 @@ class Cardinal < Mode
                 end
                 x *= z**order
             end
+
+        when :pack
+            y = pop
+            x = pop
+
+            # Map integers to naturals
+            sgn = x <=> 0
+            x = x*sgn*2 + [0, sgn].min
+
+            sgn = y <=> 0
+            y = y*sgn*2 + [0, sgn].min
+
+            # Map two naturals to one
+            z = (x+y)*(x+y+1)/2 + y
+
+            # Map the natural back to an integer
+            z = (-1)**z * ((z+1)/2)
+
+            push z
+
+        when :unpack
+            z = pop
+
+            # Map the integer to a positive natural
+            sgn = z <=> 0
+            z = z*sgn*2 + [0, sgn].min
+
+            # Map the natural to two
+            y = z
+            x = 0
+            while x < y
+                x += 1
+                y -= x
+            end
+            x -= y
+
+            # Map the naturals back to integers
+            x = (-1)**x * ((x+1)/2)
+            y = (-1)**y * ((y+1)/2)
+
+            push x
+            push y
 
         when :not
             push (pop == 0 ? 1 : 0)
