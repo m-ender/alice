@@ -670,6 +670,7 @@ class Ordinal < Mode
         'R'  => :reverse,
         'S'  => :replace,
         'T'  => :datetime,
+        'U'  => :squash,
         'V'  => :union,
         'W'  => :discard_return,
         'X'  => :symdifference,
@@ -1083,6 +1084,10 @@ class Ordinal < Mode
 
         when :characters
             @stack.state += pop.chars
+        when :squash
+            strings = []
+            strings << str while (str = pop) != ''
+            push strings.reverse.join
         when :runs
             pop.scan(/(.)\1*/s){push $&}
         when :head
