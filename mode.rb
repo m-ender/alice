@@ -123,6 +123,7 @@ class Cardinal < Mode
         'o'  => :raw_output,
 
         'A'  => :bitand,
+        'B'  => :to_digits,
         'C'  => :binomial,
         'D'  => :deduplicate,
         'E'  => :power,
@@ -139,6 +140,7 @@ class Cardinal < Mode
         'R'  => :negate,
         'S'  => :replace_divisors,
         'T'  => :sleep,
+        'U'  => :from_digits,
         'V'  => :bitor,
         'W'  => :discard_return,
         'X'  => :bitxor,
@@ -455,6 +457,44 @@ class Cardinal < Mode
                 end
                 x *= z**order
             end
+        when :to_digits
+            # Implementation ported from Jelly:
+            # https://github.com/DennisMitchell/jelly/blob/c09ab8ca400a8d146946ed1204090af73652d19c/jelly.py#L898
+            b = pop
+            x = pop
+
+            if b == 0
+                digits = [x]
+            elsif b == -1
+                digits = [1, 0]*x.abs
+                digits.pop if x > 0
+            else
+                sgn = x < 0 && b > 0 ? -1 : 1
+                x *= sgn
+                if b == 1
+                    digits = [sgn]*x
+                else
+                    digits = []
+                    while x != 0
+                        x, d = x.divmod b
+                        if d < 0
+                            x += 1
+                            d -= b
+                        end
+                        digits << sgn*d
+                    end
+                    digits.reverse!
+                end
+            end
+            digits.each {|d| push d}
+
+        when :from_digits
+            n = pop
+            b = pop
+
+            x = 0
+            n.times{|i| x += pop*b**i}
+            push x
 
         when :pack
             y = pop
@@ -614,9 +654,9 @@ class Ordinal < Mode
         'o'  => :raw_output,
 
         'A'  => :intersection,
+        'B'  => :characters,
         'C'  => :subsequences,
         'D'  => :deduplicate,
-        'E'  => :substrings,
         'F'  => :find,
         'G'  => :longest_common_substring,
         'H'  => :trim,
@@ -638,7 +678,7 @@ class Ordinal < Mode
 
         'a'  => :const_lf,
         'b'  => :shuffle,
-        'c'  => :characters,
+        'c'  => :substrings,
         'd'  => :push_joined_stack,
         'e'  => :const_empty,
         'f'  => :runs,
