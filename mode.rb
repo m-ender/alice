@@ -127,7 +127,7 @@ class Cardinal < Mode
         'o'  => :raw_output,
 
         'A'  => :bitand,
-        'B'  => :to_digits,
+        'B'  => :divisors,
         'C'  => :binomial,
         'D'  => :deduplicate,
         'E'  => :power,
@@ -144,7 +144,7 @@ class Cardinal < Mode
         'R'  => :negate,
         'S'  => :replace_divisors,
         'T'  => :sleep,
-        'U'  => :from_digits,
+        #'U'  => :from_digits,
         'V'  => :bitor,
         'W'  => :discard_return,
         'X'  => :bitxor,
@@ -459,45 +459,22 @@ class Cardinal < Mode
                 end
                 x *= z**order
             end
-        when :to_digits
-            # Implementation ported from Jelly:
-            # https://github.com/DennisMitchell/jelly/blob/c09ab8ca400a8d146946ed1204090af73652d19c/jelly.py#L898
-            b = pop
-            x = pop
-
-            if b == 0
-                digits = [x]
-            elsif b == -1
-                digits = [1, 0]*x.abs
-                digits.pop if x > 0
-            else
-                sgn = x < 0 && b > 0 ? -1 : 1
-                x *= sgn
-                if b == 1
-                    digits = [sgn]*x
-                else
-                    digits = []
-                    while x != 0
-                        x, d = x.divmod b
-                        if d < 0
-                            x += 1
-                            d -= b
-                        end
-                        digits << sgn*d
-                    end
-                    digits.reverse!
-                end
-            end
-            digits.each {|d| push d}
-
-        when :from_digits
+        when :divisors
             n = pop
-            b = pop
-
-            x = 0
-            n.times{|i| x += pop*b**i}
-            push x
-
+            sgn = n <=> 0
+            n = n.abs
+            k = 1
+            small_divs = []
+            large_divs = []
+            while k*k <= n
+                if n%k == 0
+                    small_divs << k
+                    large_divs << n/k if k*k != n
+                end
+                k += 1
+            end
+            (small_divs + large_divs.reverse).each {|k| push k*sgn}
+            
         when :pack
             y = pop
             x = pop
@@ -656,7 +633,7 @@ class Ordinal < Mode
         'o'  => :raw_output,
 
         'A'  => :intersection,
-        'B'  => :characters,
+        'B'  => :substrings,
         'C'  => :subsequences,
         'D'  => :deduplicate,
         'F'  => :find,
@@ -681,7 +658,7 @@ class Ordinal < Mode
 
         'a'  => :const_lf,
         'b'  => :shuffle,
-        'c'  => :substrings,
+        'c'  => :characters,
         'd'  => :push_joined_stack,
         'e'  => :const_empty,
         'f'  => :runs,

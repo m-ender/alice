@@ -22,7 +22,7 @@ class State
         @height = @grid.size
         @width = @height == 0 ? 0 : @grid[0].size
 
-        @ip = Point2D.new(@width-1, 0) # Instruction pointer
+        @ip = Point2D.new(-1, 0) # Instruction pointer
         @dir = East.new
         @storage_offset = Point2D.new(0, 0) # Will be used when source modification grows the
                                             # to the West or to the North.
@@ -143,8 +143,16 @@ class State
 
     def wrap
         @ip += @storage_offset
-        @ip.x %= @width
-        @ip.y %= @height
+        case @state.dir
+        when East
+            @ip.x = 0 if @ip.x >= @width
+        when West
+            @ip.x = @width-1 if @ip.x < 0
+        when South
+            @ip.y = 0 if @ip.y >= @height
+        when North
+            @ip.y = @height-1 if @ip.y < 0
+        end
         @ip -= @storage_offset
     end
 
