@@ -175,7 +175,11 @@ class State
     end
 
     def pop_return
-        @return_stack.pop || [0,0]
+        @return_stack.pop || [@ip.x, @ip.y]
+    end
+
+    def peek_return
+        @return_stack.peek || [@ip.x, @ip.y]
     end
 
     def get_iterator

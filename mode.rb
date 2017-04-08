@@ -71,6 +71,10 @@ class Mode
         @state.pop_return
     end
 
+    def peek_return
+        @state.peek_return
+    end
+
     def peek
         val = pop
         push val
@@ -257,9 +261,7 @@ class Cardinal < Mode
             x = pop
             @state.jump(x,y)
         when :return_raw
-            target = pop_return
-            push_return target
-            @state.jump(*target)
+            @state.jump(*peek_return)
         when :push_return
             push_return
         when :discard_return
@@ -340,7 +342,7 @@ class Cardinal < Mode
             y = pop
             x = pop
             if y < 0
-                push 0
+                push 1/x**y.abs
             else
                 push x**y
             end
@@ -829,9 +831,7 @@ class Ordinal < Mode
             positions = scan_source(label)
             @state.jump(*positions[0]) if !positions.empty?
         when :return_raw
-            target = pop_return
-            push_return target
-            @state.jump(*target)
+            @state.jump(*peek_return)
         when :push_return
             push_return
         when :discard_return
