@@ -198,6 +198,10 @@ class State
         @iterator_queue << iter
     end
 
+    def skip_next
+        @iterator_queue.unshift(0)
+    end
+
     def read_register
         chars = []
         i = @rp
@@ -244,9 +248,9 @@ class State
         $stderr.puts 'Tape:'
         min, max = [@mp, @rp, *@tape.keys].minmax
         width = 0
-        rp_str = "RP:"
-        tape_str = "..."
-        mp_str = "MP:"
+        rp_str = "OTH:"
+        tape_str = " ..."
+        mp_str = "CTH:"
         (min-1 .. max+1).map do |i|
             s = @tape[i].to_s
             tape_str << ' ' << s

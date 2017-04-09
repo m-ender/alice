@@ -224,9 +224,9 @@ class Cardinal < Mode
         when :turn_right
             @state.dir = @state.dir.right
         when :trampoline
-            move
+            @state.skip_next
         when :cond_trampoline
-            move if pop == 0
+            @state.skip_next if pop == 0
         when :cond_sign            
             val = pop
             if val < 0
@@ -275,10 +275,20 @@ class Cardinal < Mode
             @state.mp += 1
         when :search_left
             val = pop
-            @state.mp -= 1 while @state.tape[@state.mp] != val
+            (@state.mp-1).downto(@state.tape.keys.min-1).each do |i|
+                if @state.tape[i] == val
+                    @state.mp = i
+                    break
+                end
+            end
         when :search_right
             val = pop
-            @state.mp += 1 while @state.tape[@state.mp] != val
+            (@state.mp+1..@state.tape.keys.max+1).each do |i|
+                if @state.tape[i] == val
+                    @state.mp = i
+                    break
+                end
+            end
         when :get_mp
             push @state.mp
 
@@ -290,6 +300,7 @@ class Cardinal < Mode
             @state.ip -= @state.dir.vec
 
         when :input
+            # TODO: Skip any bytes that don't form valid UTF-8 characters.
             char = @state.in_str.getc
             push(char ? char.ord : -1)
         when :output
@@ -796,9 +807,9 @@ class Ordinal < Mode
         when :turn_right
             @state.dir = @state.dir.right
         when :trampoline
-            move
+            @state.skip_next
         when :cond_trampoline
-            move if pop == ''
+            @state.skip_next if pop == ''
         when :cond_cmp
             top = pop
             second = pop
@@ -811,10 +822,12 @@ class Ordinal < Mode
             @state.add_iterator pop
 
         when :jump
-            push_return
             label = pop
             positions = scan_source(label)
-            @state.jump(*positions[0]) if !positions.empty?
+            if !positions.empty?
+                push_return
+                @state.jump(*positions[0])
+            end
         when :return
             @state.jump(*pop_return)
         when :jump_raw
@@ -870,35 +883,37 @@ class Ordinal < Mode
             @state.rp += 1
         when :search_left
             needle = pop
-            last = @state.rp
             string = ""
 
-            @state.tape.keys.select{|i| i < @state.rp}.sort.reverse.map do |i|
-                if i+1 == last && is_char?(@state.tape[i])
+            cursor = @state.rp-1
+            cursor -= 1 while is_char? @state.tape[cursor-1]
+
+            (cursor-2).downto(@state.tape.keys.min-1).each do |i|
+                if is_char?(@state.tape[i])
                     string << @state.tape[i]
                 elsif string.reverse[needle]
-                    @state.rp = last
+                    @state.rp = i+1
                     break
                 else
                     string = ""
                 end
-                last = i
             end
         when :search_right
             needle = pop
-            last = @state.rp-1
             string = ""
 
-            @state.tape.keys.select{|i| i >= @state.rp}.sort.map do |i|
-                if i-1 == last && is_char?(@state.tape[i])
+            cursor = @state.rp
+            cursor += 1 while is_char? @state.tape[cursor]
+
+            (cursor+1..@state.tape.keys.max+1).each do |i|
+                if is_char?(@state.tape[i])
                     string << @state.tape[i]
                 elsif string[needle]
-                    @state.rp = last - string.size + 1
+                    @state.rp = i - string.size
                     break
                 else
                     string = ""
                 end
-                last = i
             end
         when :join_tape
             push @state.tape.keys.sort.map{|i| @state.tape[i]}.select{|v| is_char?(v)}.map(&:chr).join
