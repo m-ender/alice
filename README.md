@@ -75,11 +75,11 @@ As a stack-based language, Alice's primary memory storage is a single [stack](ht
 
 If a string is popped in Cardinal mode, Alice finds all integers in this string. Integers are substrings consisting only of ASCII digits, optionally prefixed by a `-`. However, if the `-` immediately follows an earlier integer, it is ignored. An example might help: in `ab12,-34cd`, Alice would find the integers `12` and `-34`. But in `ab12-34cd` it would find the integers `12` and `34` instead. All of these integers are pushed to the stack (from left to right), and then Alice tries to pop a value again. Note that if the string on top of the stack contains no integers, it will simply be discarded and Alice pops the next value instead (which may again be a string which would repeat the process).
 
-If Alice tries to pop from an empty stack in Cardinal mode, a zero is returned instead.
+If Alice tries to pop from an empty stack in Cardinal mode, a zero is returned instead. Likewise, commands which work with the stack without popping treat it as if there as in infinite amount of zeros at the bottom.
 
 If an integer is popped in Ordinal mode, Alice simply converts that integer to its usual decimal string representation.
 
-If Alice tries to pop from an empty stack in Ordinal mode, an empty string is returned instead.
+If Alice tries to pop from an empty stack in Ordinal mode, an empty string is returned instead. Likewise, commands which work with the stack without popping treat it as if there as in infinite amount of empty strings at the bottom.
 
 Note that there are few stack manipulation commands which reorder the stack *without* popping any values. Consequently, these don't cause any type conversion. This will be pointed out explicitly in the command reference, where applicable.
 
@@ -89,7 +89,9 @@ As a secondary memory storage, Alice has an infinite tape of integers. As oppose
 
 There are two independent tape heads (or memory pointers), one for Cardinal mode and one for Ordinal mode. When the current mode is clear from the context, the corresponding one will just be referred to as "the tape head". Initially, both tape heads point at the cell at index zero.
 
-Cardinal and Ordinal mode treat the data on the tape differently. Whereas Cardinal mode just considers each cell as a separate integer, Ordinal mode treats the longest sequence of characters from the tape head to the right as a string. Correspondingly, moving the Ordinal tape head moves it by entire strings. The details will be explained for the relevant commands below.
+Cardinal and Ordinal mode treat the data on the tape differently. Whereas Cardinal mode just considers each cell as a separate integer, Ordinal mode treats the tape as a tape of words.
+
+**Words** are defines as consecutive runs of cells that correspond to characters, terminated by a cell that *isn't* a character. Therefore negative values and values greater than **1114111** are considered word terminators. If there are two adjacent non-character cells, the latter represents an empty word.
 
 ### Additional state
 
@@ -205,7 +207,7 @@ Note that labels cannot span multiple lines. For example, it would not be possib
 
 This section lists all the commands available in Alice, roughly grouped into a few related categories. For the sake of completeness, the non-commands `` ` `` (which is a special no-op), `/\_|` (which are mirrors and walls) and the special commands `'` and `"` are listed here again, but remember that they are treated differently for the purposes of movement.
 
-If the reference says "Pop **n**" in Cardinal mode, **n** is always an integer. In Ordinal mode, it's always a string. See the section on the **Stack** for details of potentially required type conversions.
+If the reference says "Pop **n**" in Cardinal mode, **n** is always an integer. In Ordinal mode, it's always a string. See the section on the **Stack** for details of potentially required type conversions. In general, **n** will be used as the variable of single integer parameters, and **x**, **y**, **z** if there are several. Similarly, **s** will be used for a single string parameter, and **a**, **b**, **c** if there are several. There are some exceptions, where other variables are more conventional, like using **n** and **k** in the context of combinatorics.
 
 When the reference refers to pushing individual characters to the stack, this refers to strings containing only that character.
 
@@ -265,3 +267,34 @@ Cmd | Cardinal | Ordinal
 `O` | Pop **n**. Write the UTF-8-encoded character with code point **n** to the standard output stream. | Pop **s**. Write it as a UTF-8-encoded string to the standard output stream, followed by a linefeed (0x0A).
 
 <sup>‡</sup> This will skip any leading bytes that do not form a valid UTF-8 character.
+
+### Grid manipulation
+
+
+Cmd | Cardinal | Ordinal
+--- | -------- | -------
+`g` | Pop **y**. Pop **x**. Get the value in the grid cell at **(x,y)** and push it. | Pop **s**. Scan the grid for the label **s**. If the label was found, push everything after the label (on the same diagonal) as a single string.
+`p` | Pop **v**. Pop **y**. Pop **x**. Set the value in the grid cell at **(x,y)** to **v**. | Pop **v**. Pop **s**. Starting at the cell after the label (on the same diagonal), write **v** onto the grid, one character per cell. If **v** is longer than the remainder of the diagonal, this will write over the edge of the grid and thereby extend the bounding box of the grid.
+
+### Stack manipulation
+
+Cmd | Cardinal | Ordinal
+--- | -------- | -------
+`,` | Pop **n**. If **n** is positive, move the element which is **n** elements below the top to the top. If **n** is negative, move the top stack element down the stack by **n** positions. These operations do not pop and push elements and therefore don't convert any data types. | Pop **s**. Use as a permutation to reorder the stack. This is done by aligning the string character-by-character with the stack elements, so that the last element corresponds to the top of the stack (and the first character corresponds to the **n**th element from the top, where **n** is the length of **s**). Then the string is sorted stably, while keeping each stack element paired with its corresponding character. Hence, the stack elements perform the reordering that is required to sort **s**.
+`~` | Swap. Pop **y**. Pop **x**. Push **y**. Push **x**. | Swap. Pop **b**. Pop **a**. Push **b**. Push **a**.
+`.` | Duplicate. Pop **n**. Push **n** twice. | Duplicate. Pop **s**. Push **s** twice.
+`;` | Pop one integer and discard it. | Pop one string and discard it.
+`Q` | Pop **n**. Pop **n** values and push them again, so that their order *remains the same*. This can be used to force conversion of stack elements from the top such that there are at least **n** integers on top of the stack (as opposed to strings). | Pop all stack elements and push them again, so that their order is *reversed*. This also forces conversion to strings, although there are no cases where an explicit conversion to strings can change the behaviour of a program.
+`d` | Depth. Push the number of elements currently in the stack (without popping or converting any of them). | Make a copy of each stack element, convert it to a string, join them all together (so that the top element is at the end) and push the result. This does not affect any of the existing stack elements.
+
+### Tape manipulation
+
+Cmd | Cardinal | Ordinal
+--- | -------- | -------
+`!` | Pop **n**. Store it in the current tape cell. | Pop **s**. Store it as a word on the tape. In particular, store its characters on the tape, starting at the position of the tape head and going right. The cell right after the end of **s** gets set to **-1** to ensure that there is a word terminator.
+`?` | Push the value in the current tape cell to the stack. | Read a word from the tape cell by taking the longest run of characters from the position of the tape head to the right and push it to the stack.
+`[` | Move the tape head one cell to the left. | Move the tape head one word to the left. Specifically, move the tape head left as long as that cell holds a character (to move the tape head to the beginning of the current word) — this part will usually be skipped. Then move it one more cell to the left (to move it onto the previous word terminator). Then move it left again as long as that cell holds a character (to move the tape head to the beginning of the previous word).
+`]` | Move the tape head one cell to the right. | Move the tape head one word to the right. Specifically, move the tape head right as long as the current cell holds a character (to move the tape head to the terminator of the current word). Then move it one more cell to the right (to move it onto the beginning of the next word).
+`(` | Pop **n**. Search for **n** left of the tape head (excluding the current cell itself). If it is found, move the tape head to the nearest occurrence. | Pop **s**. Search for a word containing **s** as a substring left of the currently pointed to word (excluding that word itself). If such a word is found, move the tape head to its beginning.
+`)` | Pop **n**. Search for **n** right of the tape head (excluding the current cell itself). If it is found, move the tape head to the nearest occurrence. | Pop **s**. Search for a word containing **s** as a substring right of the currently pointed to word (excluding that word itself). If such a word is found, move the tape head to its beginning.
+`q` | Push the current *position* of the tape head. | Join all words on the tape into a single string and push it.
