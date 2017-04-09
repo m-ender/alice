@@ -173,7 +173,7 @@ class Cardinal < Mode
         'w'  => :push_return,
         'x'  => :extract_bit,
         'y'  => :bit_if,
-        'z'  => :transpose_ip,
+        'z'  => :drop_small_factors,
     }
 
     OPERATORS.default = :nop
@@ -236,18 +236,6 @@ class Cardinal < Mode
             end
         when :repeat_iterator
             @state.add_iterator pop
-        when :transpose_ip
-            @state.jump(@state.ip.y, @state.ip.x)
-            case @state.dir
-            when East
-                @state.dir = South.new
-            when West
-                @state.dir = North.new
-            when South
-                @state.dir = East.new
-            when North
-                @state.dir = West.new
-            end
 
         when :jump
             push_return
@@ -474,7 +462,16 @@ class Cardinal < Mode
                 k += 1
             end
             (small_divs + large_divs.reverse).each {|k| push k*sgn}
-            
+        
+        when :drop_small_factors
+            # TODO: Decide on behaviour for negative k.
+            k = pop
+            n = pop
+
+            (2..k).each {|i| n /= i while n % i == 0}
+
+            push n
+
         when :pack
             y = pop
             x = pop
@@ -684,7 +681,7 @@ class Ordinal < Mode
         'w'  => :push_return,
         'x'  => :permute,
         'y'  => :transliterate,
-        'z'  => :transpose,
+        'z'  => :discard_up_to,
 
         #'('  => ,
         #')'  => ,
@@ -964,12 +961,15 @@ class Ordinal < Mode
                 string = string.chars.map{|c| target[source.index c]}.join
             end
             push string
-        when :transpose
-            lines = pop.lines
-            width = lines.map(&:size).max
-            (0...width).map do |i|
-                lines.map{|l| l[i] || ''}.join
-            end.join $/
+        when :discard_up_to
+            y = pop
+            x = pop
+
+            i = x.index y
+            x[0,i+y.size] = '' if i
+
+            push x
+
         when :find
             needle = pop
             haystack = pop
