@@ -172,7 +172,7 @@ class Cardinal < Mode
         'u'  => :set_bits,
         'w'  => :push_return,
         'x'  => :extract_bit,
-        'y'  => :bit_if,
+        'y'  => :bitif,
         'z'  => :drop_small_factors,
     }
 
@@ -425,7 +425,7 @@ class Cardinal < Mode
             if n == 0
                 push 0
             else
-                Prime.prime_division(pop).each{ |p,n| n.times{ push p } }
+                Prime.prime_division(n).each{ |p,n| n.times{ push p } }
             end
         when :prime_factor_pairs
             n = pop
@@ -433,14 +433,19 @@ class Cardinal < Mode
                 push 0
                 push 1
             else
-                Prime.prime_division(pop).flatten.each{ |x| push x }
+                Prime.prime_division(n).flatten.each{ |x| push x }
             end
         when :deduplicate
-            Prime.int_from_prime_division(Prime.prime_division(pop.map{ |p,n| [p,1]}))
+            n = pop
+            if n == 0
+                push 0
+            else
+                push Prime.int_from_prime_division(Prime.prime_division(n).map{ |p,n| [p,1]})
+            end
         when :divides
             y = pop
             x = pop
-            if x % y == 0
+            if y != 0 && x % y == 0
                 push y
             else
                 push 0
@@ -459,6 +464,14 @@ class Cardinal < Mode
             x = pop
             if x == 0
                 push 0
+            elsif y == 1 || y == -1
+                if z == y
+                    push x
+                elsif z == 0
+                    push 0
+                else
+                    loop { next }
+                end
             else
                 order = 0
                 while x%y == 0
@@ -487,11 +500,14 @@ class Cardinal < Mode
             k = pop
             n = pop
 
-            if k > 0
-                (2..k).each {|i| n /= i while n % i == 0}
-            else
-                -2.downto(k) {|i| n /= i while n % i == 0}
+            if n != 0
+                if k > 0
+                    (2..k).each {|i| n /= i while n % i == 0}
+                else
+                    -2.downto(k) {|i| n /= i while n % i == 0}
+                end
             end
+
             push n
 
         when :pack
@@ -977,6 +993,8 @@ class Ordinal < Mode
         when :trim
             push pop.gsub(/^[ \n\t]+|[ \n\t]+$/, '')
         when :transliterate
+            # TODO: maybe don't ignore additional copies of characters in source, but instead
+            #       cycle through the corresponding characters in target.
             target = pop
             source = pop
             string = pop
@@ -1151,7 +1169,7 @@ class Ordinal < Mode
 
         when :expand_ranges
             val = pop
-            val.chars.each_cons(2).map{ |a,b| 
+            push val.chars.each_cons(2).map{ |a,b| 
                 if a > b
                     (b..a).drop(1).to_a.reverse.join
                 else
