@@ -55,6 +55,8 @@ Alice's defining feature is that it can operate in two different modes:
 
 Alice switches between the two modes by stepping through *mirrors* (of course). Consequently, the two modes were designed to feel somewhat like two parallel universes, where many things look and feel the same but are actually subtly (or not so subtly) different. Every command (except for some very basic stack manipulation) has two different meanings in the two modes, movement works somewhat differently and memory is interpreted in a different way.
 
+The parallels between Cardinal and Ordinal mode were designed with a few themes in mind. For example, Ordinal-mode commands which work with substrings are often paired with similar Cardinal-mode commands that work with divisors, bitwise commands are paired set-theoretic commands and so on.
+
 ### Memory model
 
 Alice's memory model spans three types of storage.
@@ -199,4 +201,18 @@ Note that labels cannot span multiple lines. For example, it would not be possib
 
 ## Command reference
 
-*coming soon*
+This section lists all the commands available in Alice, roughly grouped into a few related categories. For the sake of completeness, the non-commands `` ` `` (which is a special no-op), `/\_|` (which are mirrors and walls) and the special commands `'` and `"` are listed here again, but remember that they are treated differently for the purposes of movement.
+
+### Debugging
+
+Cmd | Cardinal | Ordinal
+--- | -------- | -------
+`` ` `` | Special no-op: prints debug information to the standard error stream. | Same as Cardinal.
+
+### Control flow
+
+Cmd | Cardinal | Ordinal
+--- | -------- | -------
+`@` | Terminate the program. | Terminate the program.
+`/` | Reflect the IP through 67.5 degrees, switch between modes. See section on **Mirrors** for details. | Same as Cardinal.
+`\` | Reflect the IP through -67.5 degrees, switch between modes. See section on **Mirrors** for details. | Same as Cardinal.
