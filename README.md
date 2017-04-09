@@ -2,7 +2,7 @@
 
 "...the slithy toves did gyre and gimble in the wabe." — Lewis Carroll
 
-Alice is two-dimensional, stack-based, recreational programming language. It was designed as a feature-rich [Fungeoid](https://esolangs.org/wiki/Fungeoid) with many useful (and some not so useful) commands which make it comparably usable for a 2D language. To this end, depending on whether the instruction pointer moves orthogonally or diagonally, Alice operates either in an integer mode or in a string mode, which allows every operator to be overloaded with two different commands.
+Alice is a two-dimensional, stack-based, recreational programming language. It was designed as a feature-rich [Fungeoid](https://esolangs.org/wiki/Fungeoid) with many useful (and some not so useful) commands which make it comparably usable for a 2D language. To this end, depending on whether the instruction pointer moves orthogonally or diagonally, Alice operates either in an integer mode or in a string mode, which allows every operator to be overloaded with two different commands.
 
 ## Overview
 
@@ -22,18 +22,18 @@ For example the following source file...
     D
     EF
 
-Would lead to the following initial grid:
+...would lead to the following initial grid:
 
-     x ... -2 -1  0  1  2  3  4  ...
-    y
+       x ... -2 -1  0  1  2  3  4  ...
+     y
     ...
-    -2     -1 -1 -1 -1 -1 -1 -1
-    -1     -1 -1 -1 -1 -1 -1 -1
-     0     -1 -1 65 66 67 -1 -1
-     1     -1 -1 68 32 32 -1 -1
-     2     -1 -1 69 70 32 -1 -1
-     3     -1 -1 -1 -1 -1 -1 -1
-     4     -1 -1 -1 -1 -1 -1 -1
+    -2       -1 -1 -1 -1 -1 -1 -1
+    -1       -1 -1 -1 -1 -1 -1 -1
+     0       -1 -1 65 66 67 -1 -1
+     1       -1 -1 68 32 32 -1 -1
+     2       -1 -1 69 70 32 -1 -1
+     3       -1 -1 -1 -1 -1 -1 -1
+     4       -1 -1 -1 -1 -1 -1 -1
     ...
 
 While it's possible to access the entire unbounded grid over the course of program execution, in the following *"the grid"* will refer to the smallest rectangle that contains all values which aren't `-1`. There will always be a finite number of such cells, so this is well-defined. However, the grid *may* grow or shrink during program execution if the grid values are modified such that the bounding box of non-`-1` cells changes.

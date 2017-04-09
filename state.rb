@@ -143,7 +143,7 @@ class State
 
     def wrap
         @ip += @storage_offset
-        case @state.dir
+        case @dir
         when East
             @ip.x = 0 if @ip.x >= @width
         when West

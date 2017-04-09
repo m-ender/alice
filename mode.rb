@@ -144,7 +144,7 @@ class Cardinal < Mode
         'R'  => :negate,
         'S'  => :replace_divisors,
         'T'  => :sleep,
-        #'U'  => :from_digits,
+        'U'  => :random,
         'V'  => :bitor,
         'W'  => :discard_return,
         'X'  => :bitxor,
@@ -152,7 +152,7 @@ class Cardinal < Mode
         'Z'  => :pack,
 
         'a'  => :const_10,
-        'b'  => :random,
+        'b'  => :random_swap,
         'c'  => :prime_factors,
         'd'  => :stack_depth,
         'e'  => :const_m1,
@@ -537,6 +537,12 @@ class Cardinal < Mode
             else
                 push -(rand val)
             end
+        when :random_swap
+            top = pop
+            second = pop
+            top, second = [top, second].shuffle
+            push second
+            push top
 
         when :sortswap
             top = pop
@@ -649,7 +655,7 @@ class Ordinal < Mode
         'R'  => :reverse,
         'S'  => :replace,
         'T'  => :datetime,
-        'U'  => :squash,
+        'U'  => :random_choice,
         'V'  => :union,
         'W'  => :discard_return,
         'X'  => :symdifference,
@@ -1058,13 +1064,11 @@ class Ordinal < Mode
 
         when :shuffle
             push pop.chars.shuffle.join
+        when :random_choice
+            push pop.chars.sample || ''
 
         when :characters
             @stack.state += pop.chars
-        when :squash
-            strings = []
-            strings << str while (str = pop) != ''
-            push strings.reverse.join
         when :runs
             pop.scan(/(.)\1*/s){push $&}
         when :head
