@@ -410,11 +410,20 @@ class Cardinal < Mode
         when :negate
             push -pop
         when :prime_factors
-            # TODO: settle on behaviour for n < 2
-            Prime.prime_division(pop).each{ |p,n| n.times{ push p } }
+            n = pop
+            if n == 0
+                push 0
+            else
+                Prime.prime_division(pop).each{ |p,n| n.times{ push p } }
+            end
         when :prime_factor_pairs
-            # TODO: settle on behaviour for n < 2
-            Prime.prime_division(pop).flatten.each{ |x| push x }
+            n = pop
+            if n == 0
+                push 0
+                push 1
+            else
+                Prime.prime_division(pop).flatten.each{ |x| push x }
+            end
         when :deduplicate
             Prime.int_from_prime_division(Prime.prime_division(pop.map{ |p,n| [p,1]}))
         when :divides
