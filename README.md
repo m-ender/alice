@@ -207,6 +207,8 @@ This section lists all the commands available in Alice, roughly grouped into a f
 
 If the reference says "Pop **n**" in Cardinal mode, **n** is always an integer. In Ordinal mode, it's always a string. See the section on the **Stack** for details of potentially required type conversions.
 
+When the reference refers to pushing individual characters to the stack, this refers to strings containing only that character.
+
 ### Debugging
 
 Cmd | Cardinal | Ordinal
@@ -232,11 +234,34 @@ Cmd | Cardinal | Ordinal
 `#` | Skip the next command. This is implemented by adding a **0** to the *front* of the iterator queue. | Same as Cardinal. (Technically, this one uses **""** as the iterator, but **""** and **0** are functionally equivalent as iterators.)
 `$` | Pop **n**. Act like `#` if **n = 0**, do nothing otherwise. | Pop **s**. Act like `#` if **s = ""**, do nothing otherwise.
 `j` | Pop **y**. Pop **x**. Push the current IP address to the return address stack. Jump to **(x,y)**.<sup>\*</sup> | Pop **s**. Search the grid for the label **s**. If the label is not found, do nothing. Otherwise, push the current IP address to the return address stack and jump to the last cell of the label.<sup>\*</sup>
-`J` | Same as `j`, but does not push the current IP to the return address stack. | Same as `j`, but does not push the current IP to the return address stack.
-`k` | Pop an address from the return address stack and jump there. | Same as Cardinal.
-`K` | Peek at the top of the return address stack and jump there. | Same as Cardinal.
+`J` | Same as `j`, but does not push the current IP to the return address stack.<sup>\*</sup> | Same as `j`, but does not push the current IP to the return address stack.<sup>\*</sup>
+`k` | Pop an address from the return address stack and jump there.<sup>\*</sup> | Same as Cardinal.
+`K` | Peek at the top of the return address stack and jump there.<sup>\*</sup> | Same as Cardinal.
 `w` | Push the current IP address to the return address stack (without jumping anywhere). | Same as Cardinal.
 `W` | Pop and discard the top of the return address stack. | Same as Cardinal.
 `&` | Pop **n**. Add **n** to the iterator queue. | Pop **s**. Add **s** to the iterator queue.
 
 <sup>\*</sup> Remember that the IP will then move *before* the next command is executed.
+
+### Literals and constants
+
+Cmd | Cardinal | Ordinal
+--- | -------- | -------
+`"` | Toggles string mode. Only exiting string mode is considered a command, and pushes the individual code points of the string to the stack. See the section on **String mode** for details. | Toggles string mode. Only exiting string mode is considered a command, and pushes the entire string to the stack. See the section on **String mode** for details. 
+`'` | Pushes the code point of the next grid cell to the stack.<sup>†</sup>  | Pushes the character in the next grid cell to the stack.<sup>†</sup>
+`0-9` | Pushes the corresponding digit to the stack. | Pop **s**. Append the corresponding digit as a character to **s** and push the result.
+`a` | Push **10**. | Push a single linefeed character (0x0A).
+`e` | Push **-1**. | Push an empty string.
+
+<sup>†</sup> The next cell will be skipped by the subsequent move, but not as part of the command. This distinction is important when working with iterators. 
+
+### Input and output
+
+Cmd | Cardinal | Ordinal
+--- | -------- | -------
+`i` | Read a single byte from the standard input stream and push it. | Read the entire UTF-8-encoded standard input stream (until EOF is encountered) and push it as a single string.<sup>‡</sup>
+`I` | Read a single UTF-8-encoded character from the standard input stream and push its code point.<sup>‡</sup> | Read one UTF-8-encoded line from the standard input stream (i.e. up to the first linefeed, 0x0A) and push it as a single string. The linefeed is consumed but not included in the resulting string.<sup>‡</sup>
+`o` | Pop **n**. Write its 8 least significant bits as a byte to the standard output stream. | Pop **s**. Write it as a UTF-8-encoded string to the standard output stream.
+`O` | Pop **n**. Write the UTF-8-encoded character with code point **n** to the standard output stream. | Pop **s**. Write it as a UTF-8-encoded string to the standard output stream, followed by a linefeed (0x0A).
+
+<sup>‡</sup> This will skip any leading bytes that do not form a valid UTF-8 character.
