@@ -473,12 +473,14 @@ class Cardinal < Mode
             (small_divs + large_divs.reverse).each {|k| push k*sgn}
         
         when :drop_small_factors
-            # TODO: Decide on behaviour for negative k.
             k = pop
             n = pop
 
-            (2..k).each {|i| n /= i while n % i == 0}
-
+            if k > 0
+                (2..k).each {|i| n /= i while n % i == 0}
+            else
+                -2.downto(k) {|i| n /= i while n % i == 0}
+            end
             push n
 
         when :pack

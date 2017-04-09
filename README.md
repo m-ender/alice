@@ -4,7 +4,7 @@
 
 Alice is a two-dimensional, stack-based, recreational programming language. It was designed as a feature-rich [Fungeoid](https://esolangs.org/wiki/Fungeoid) with many useful (and some not so useful) commands which make it comparably usable for a 2D language. To this end, depending on whether the instruction pointer moves orthogonally or diagonally, Alice operates either in an integer mode or in a string mode, which allows every operator to be overloaded with two different commands.
 
-## Overview
+## Language concepts
 
 This section introduces some general concepts about Alice's programming model.
 
@@ -155,7 +155,7 @@ Cardinal mode uses wrapping boundaries like many other Fungeoids. If the IP is o
 
 Ordinal mode uses solid boundaries instead, which act similarly to walls. If the IP would move out of bounds with the current step, its direction will instead be reflected on the boundary before taking the step. If the IP would move through a corner of the grid, its direction gets reversed.
 
-If the grid is only one cell tall or wide, it is not possible for the IP to take any diagonal steps so the IP will remain in place. If the current cell is a command, that command would get executed over and over again (but setting this up is quite non-trivial and should be considered a tremendous edge case). If the IP manages to end up out of bounds (which is also a very unlikely edge case), it will be stuck there forever.
+If the grid is only one cell tall or wide, it is not possible for the IP to take any diagonal steps so the IP will remain in place. If the current cell is a command, that command would get executed over and over again (but setting this up is quite non-trivial and should be considered a tremendous edge case). If the IP manages to end up out of bounds by more than one cell (which is also a very unlikely edge case), it will be stuck there forever.
 
 ### Commands
 
@@ -181,6 +181,21 @@ Remember that entering string mode is not considered a command for the purpose o
 If string mode ends in Cardinal mode, the resulting command pushes the code point of each character in the string once as an integer to the stack.
 
 If string mode ends in Ordinal mode, the resulting command pushes the entire string to the stack.
+
+### Labels
+
+While Cardinal mode uses integer coordinate pairs to address cells in the grid (e.g. to manipulate the grid or for certain control flow commands), Ordinal mode has no concept of integers. Instead, Ordinal mode uses **labels** to refer to positions on the grid.
+
+A label is just a string that appears somewhere on the grid, but since Ordinal mode operates along diagonals, labels are also searched for along diagonals. When a command tries to find a certain label, it effectively rotates the grid by a multiple of 45 degrees so that the IP points east, and then searches for the label in normal (left-to-right, top-to-bottom) reading order. To make it explicit, the following four grids show in which order the grid is scanned depending on the IP's current direction:
+
+    Direction:   SE    SW    NW    NE
+
+    Scanning    gdba  pnkg  jmop  acfj
+    order:      khec  olhd  filn  beim
+                nlif  mieb  cehk  dhlo
+                pomj  jfca  abdg  gknp
+
+Note that labels cannot span multiple lines. For example, it would not be possible to find the label `cde` in any of the above grids. Alice will only search the strings `a`, `bc`, `def`, `ghij`, `klm`, `no` and `p` for the label. Commands will either refer to the cell after the label (along its diagonal), or to the one directly before that (so in general, the end of the label is the relevant reference point). The exact usage of the label is described below for the relevant commands.
 
 ## Command reference
 
