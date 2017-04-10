@@ -30,11 +30,11 @@ class Mode
         cell = @state.cell 
         case cell
         when '/'.ord, '\\'.ord
-            @state.dir = @state.dir.reflect cell.chr
+            @state.dir = @state.dir.reflect cell.chr_utf_8
             @state.toggle_mode
             return false
         when '_'.ord, '|'.ord
-            @state.dir = @state.dir.reflect cell.chr
+            @state.dir = @state.dir.reflect cell.chr_utf_8
             return false
         end
 
@@ -42,7 +42,7 @@ class Mode
 
         @state.print_debug_info if cell == '`'.ord
 
-        is_char?(cell) && self.class::OPERATORS.has_key?(cell.chr)
+        is_char?(cell) && self.class::OPERATORS.has_key?(cell.chr_utf_8)
     end
 
     # Moves the IP a single cell without regard for mirrors, walls or no-ops.
@@ -306,15 +306,15 @@ class Cardinal < Mode
             # Will throw an error when value isn't a valid code point
             val = pop
             if is_char?(val)
-                @state.out_str << val.chr
+                val.chr_utf_8.unpack('C*').each{|c| @state.out_str.putc c }
             end
         when :raw_input
             push(@state.in_str.getbyte || -1)
         when :raw_output
-            # TODO: do
+            @state.out_str.putc pop
 
         when :digit
-            push cmd.chr.to_i
+            push cmd.to_i
         when :add
             push(pop + pop)
         when :sub
@@ -783,7 +783,7 @@ class Ordinal < Mode
             max_x = [width-1,d].min
             line = (min_x..max_x).map do |x|
                 y = d - x
-                grid[y][x].chr
+                grid[y][x].chr_utf_8
             end.join
 
             line.scan(/(?=#{Regexp.escape(label)})/) do
@@ -942,35 +942,36 @@ class Ordinal < Mode
         when :escape
             raw_move
             if is_char?(@state.cell)
-                push @state.cell.chr
+                push @state.cell.chr_utf_8
             else
                 push ''
             end
             @state.ip -= @state.dir.vec
 
         when :digit
-            push(pop + cmd.chr)
+            push(pop + cmd)
 
         when :input
             line = @state.in_str.gets
             push(line ? line.scrub('').chomp : '')
         when :output
-            @state.out_str.puts pop
+            pop.unpack('C*').each{|c| @state.out_str.putc c }
+            @state.out_str.puts
         when :raw_input
             str = @state.in_str.read
             push(str ? str.scrub('') : '')
         when :raw_output
-            @state.out_str << pop
+            pop.unpack('C*').each{|c| @state.out_str.putc c }
 
         when :superimpose
             top = pop
             second = pop
             result = ""
             [top.size, second.size].max.times do |i|
-                result << [top[i] || 0.chr, second[i] || 0.chr].max
+                result << [top[i] || 0.chr_utf_8, second[i] || 0.chr_utf_8].max
             end
             push result
-            
+
         when :concat
             top = pop
             second = pop

@@ -5,6 +5,24 @@ Encoding.default_external = Encoding::UTF_8
 
 require_relative 'state'
 
+# Add stable sorting methods to Enumerable
+module Enumerable
+  def stable_sort
+    sort_by.with_index { |x, idx| [x, idx] }
+  end
+
+  def stable_sort_by
+    sort_by.with_index { |x, idx| [yield(x), idx] }
+  end
+end
+
+# Add convenience method for .chr(Encoding::UTF_8)
+class Integer
+    def chr_utf_8
+        chr(Encoding::UTF_8)
+    end
+end
+
 class Alice
     attr_accessor :state
 
