@@ -137,17 +137,16 @@ These are simplest: if the IP encounters `_` or `|` during a move, its direction
 
 Mirrors, `/` and `\`, are a staple in 2D languages, but in Alice they work a bit differently than you probably expect. First of all, in Alice the IP moves *through* mirrors and doesn't get reflected at them. But secondly, Alice acknowledges that the characters `/` and `\` are rarely displayed at 45 degree angles, so having them cause 90 degree reflections is somewhat unfitting. The angles in many fonts are actually closer to 67.5 degrees, and therefore mirrors reflect between orthogonal and diagonal movement in Alice.
 
-Unfortunately, this may look slightly confusing in the source code at first, because most fonts (even monospaced ones) also don't have square character cells. Therefore, here are two diagrams which visualise how the IP moves through a mirror, coming from a horizontal or vertical direction:
+Unfortunately, this may look slightly confusing in the source code at first, because most fonts (even monospaced ones) also don't have square character cells. Therefore, here are 16 diagrams which visualise every possible way the IP can enter a mirror:
 
-![Movement through mirrors][mirrors]
+[![Movement through mirrors][mirrors]][mirrors]  
+<sup>Click for larger version</sup>
 
-If this reflection seems weird (especially the second one), imagine holding a long straight stick with one end to the surface of a mirror. The IP comes in along that stick and when it hits the surface of the mirror it goes "into" the mirror and continues along the reflection of the stick.
-
-All other possible directions for hitting the mirror are completely symmetric to one of the above two diagrams (you either reverse the direction of the IP, rotate the diagram by 180 degrees, or mirror it horizontally).
+If this reflection seems weird (especially the acute-angled cases), imagine holding a long straight stick with one end to the surface of a mirror. The IP comes in along that stick and when it hits the surface of the mirror it goes "into" the mirror and continues along the reflection of the stick.
 
 Note that this always changes orthogonal movement to diagonal movement and vice versa. Therefore, mirrors always toggle between Cardinal mode and Ordinal mode, and they are also the *only* way in the language to switch between modes.
 
-  [mirrors]: https://i.stack.imgur.com/zXs4J.png
+  [mirrors]: https://i.stack.imgur.com/YHx0d.png
 
 #### Boundaries
 
