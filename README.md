@@ -303,12 +303,12 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`+` | **Add**. Pop **y**. Pop **x**. Push **x + y**. | **Concatenate.** Pop **b**. Pop **a**. Push the concatenation of **a** and **b**.
+`+` | **Add**. Pop **y**. Pop **x**. Push **x + y**. | **Superimpose.** Pop **b**. Pop **a**. Add null characters to the end of the shorter string until they are the same length. Then form a new string by taking the character with the larger code point at each position, and push that string.
 `-` | **Subtract.** Pop **y**. Pop **x**. Push **x - y**. | **Remove.** Pop **b**. Pop **a**. Remove all occurrences of **b** from **a** and push the result. If there are overlapping occurrences, the characters from all those occurrences will be removed (e.g. operands **"abcbcbd"** and **"bcb"** would yield **"ad"**).
-`*` | **Multiply.** Pop **y**. Pop **x**. Push **x * y**. | **Riffle.** Pop **b**. Pop **a**. Insert **b** between every pair of characters in **a** and push the result.
+`*` | **Multiply.** Pop **y**. Pop **x**. Push **x * y**. | **Concatenate.** Pop **b**. Pop **a**. Push the concatenation of **a** and **b**.
 `:` | **Divide.** Pop **y**. Pop **x**. Push **x / y**. Results are rounded towards negative infinity. Terminates the program with an error if **y = 0**. | **Occurrences.** Pop **b**. Pop **a**. Push all *non-overlapping* occurrences of **b** in **a** (e.g. operands **"abcbcbcbd"** and **"bcb"** would push **"bcb"** only twice).
 `%` | **Modulo.** Pop **y**. Pop **x**. Push **x % y** (modulo). The sign of the result matches the sign of **y**, such that **(x / y) * y + x % y = x** is guaranteed. Terminates the program with an error if **y = 0**. | **Split.** Pop **b**. Pop **a**. Split **a** into chunks separated by occurrences of **b** and push those chunks.
-`E` | **Power.** Pop **y**. Pop **x**. Push **x<sup>y</sup>**. If **x = y = 0**, push **1**. If **y** is negative, round the result towards negative infinity. | ???
+`E` | **Power.** Pop **y**. Pop **x**. Push **x<sup>y</sup>**. If **x = y = 0**, push **1**. If **y** is negative, round the result towards negative infinity. | **Riffle.** Pop **b**. Pop **a**. Insert **b** between every pair of characters in **a** and push the result.
 `H` | **Abs.** Pop **n**. Push **\|n\|**. | **Trim.** Pop **s**. Remove all tabs (0x09), linefeeds (0x0A) and spaces (0x20) from both ends of the string.
 `M` | **Divmod.** Pop **y**. Pop **x**. Push both **x / y** and **x % y**. See commands `:` and `%` for details. | **Split with delimiters.** Pop **b**. Pop **a**. Split **a** before and after each non-overlapping occurrence of **b** and push the individual chunks.
 `R` | **Negate.** Pop **n**. Push **-n**. | **Reverse.** Pop **s**. Reverse **s** and push the result.
