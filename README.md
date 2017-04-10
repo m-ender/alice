@@ -368,3 +368,12 @@ Cmd | Cardinal | Ordinal
 `r` | **Range.** Pop **n**. If **n ≥ 0**, push all integers from **0** to **N**, inclusive. If **n < 0**, push all integers from **-n** to **0**, inclusive. | **Range expansion.** Pop **s**. First, reduce all consecutive runs of equal characters to a single copy of that character. Then, for each pair of adjacent characters **a** and **b**, insert all intermediate characters between them. Push the result. For example, **"aebbfbbbda"** becomes **"abcdedcbcdefedcbcdcba"**.
 `s` | **Sort swap.** Pop **y**. Pop **x**. If **x > y**, swap **x** and **y**. Push **x**, push **y**. | **Sort.** Pop **s**. Sort the characters in **s**. Push **s**.
 `x` | **Extract bit.** Pop **y**. Pop **x**. Extract the **y**th bit from the binary representation of **x**. | **Permute string.** Pop **y**. Pop **x**. Reorder **x** according to **y**, similar to the `,` command. This is done by aligning the strings character-by-character. If **x** is shorter than **y**, the last characters of **y** are paired with empty strings. If **y** is shorter than **x**, the remaining characters in **x** will be unaffected. Then **y** is sorted stably, while keeping each of its characters paired with the corresponding character from **x**. Then join the characters (and possibly empty strings) from **x** back together and push the result. Hence, the characters in **x** are reordered by the same permutation that would sort **y**.
+
+
+## Reference implementation
+
+This repository also contains a reference implementation of the language in Ruby.
+
+To run a program, simply invoke the interpreter with the source code's file name as a command-line argument, e.g.
+
+    $ ruby ./interpreter.rb ./examples/hw.alice
