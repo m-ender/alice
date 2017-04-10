@@ -215,33 +215,33 @@ When the reference refers to pushing individual characters to the stack, this re
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`` ` `` | Special no-op: prints debug information to the standard error stream. | Same as Cardinal.
+`` ` `` | **Debug.** Special no-op: prints debug information to the standard error stream. | **Debug.** Same as Cardinal.
 
 ### Control flow
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`@` | Terminate the program. | Terminate the program.
-`/` | Reflect the IP through 67.5 degrees, switch between modes. See section [on mirrors](#mirrors) for details. | Same as Cardinal.
-`\` | Reflect the IP through -67.5 degrees, switch between modes. See section [on mirrors](#mirrors) for details. | Same as Cardinal.
-`_` | Reflect the IP through 0 degrees. See section [on walls](#walls) for details. | Same as Cardinal.
-`\|` | Reflect the IP through 90 degrees. See section [on walls](#walls) for details. | Same as Cardinal.
-`<` | Set the IP direction to west. | Set the IP direction to southwest (northwest) if the IP is moving southeast (northeast).
-`>` | Set the IP direction to east. | Set the IP direction to southeast (northeast) if the IP is moving southwest (northwest).
-`^` | Set the IP direction to north. | Set the IP direction to northwest (northeast) if the IP is moving southwest (southeast).
-`v` | Set the IP direction to south. | Set the IP direction to southwest (southeast) if the IP is moving northwest (northeast).
-`{` | Turn the IP direction left by 90 degrees. | Turn the IP direction left by 90 degrees.
-`}` | Turn the IP direction right by 90 degrees. | Turn the IP direction right by 90 degrees.
-`=` | Pop **n**. Act like `{` if **n** is negative, like `}` if **n** is positive. Has no further effect if **n = 0**. | Pop **b**. Pop **a**. Act like `{` if **a < b**, act like `}` if **a > b**. Has no further effect if **a = b**. Comparisons are based on the lexicographic ordering of the strings.
-`#` | Skip the next command. This is implemented by adding a **0** to the *front* of the iterator queue. | Same as Cardinal. (Technically, this one uses **""** as the iterator, but **""** and **0** are functionally equivalent as iterators.)
-`$` | Pop **n**. Act like `#` if **n = 0**, do nothing otherwise. | Pop **s**. Act like `#` if **s = ""**, do nothing otherwise.
-`j` | Pop **y**. Pop **x**. Push the current IP address to the return address stack. Jump to **(x,y)**.<sup>\*</sup> | Pop **s**. Search the grid for the label **s**. If the label is not found, do nothing. Otherwise, push the current IP address to the return address stack and jump to the last cell of the label. See the section [on labels](#labels) for details.<sup>\*</sup>
-`J` | Same as `j`, but does not push the current IP to the return address stack.<sup>\*</sup> | Same as `j`, but does not push the current IP to the return address stack.<sup>\*</sup>
-`k` | Pop an address from the return address stack and jump there.<sup>\*</sup> | Same as Cardinal.
-`K` | Peek at the top of the return address stack and jump there.<sup>\*</sup> | Same as Cardinal.
-`w` | Push the current IP address to the return address stack (without jumping anywhere). | Same as Cardinal.
-`W` | Pop and discard the top of the return address stack. | Same as Cardinal.
-`&` | Pop **n**. Add **n** to the iterator queue. | Pop **s**. Add **s** to the iterator queue.
+`@` | **End.** Terminate the program. | **End.** Terminate the program.
+`/` | **Mirror.** Reflect the IP through 67.5 degrees, switch between modes. See section [on mirrors](#mirrors) for details. | **Mirror.** Same as Cardinal.
+`\` | **Mirror.** Reflect the IP through -67.5 degrees, switch between modes. See section [on mirrors](#mirrors) for details. | **Mirror.** Same as Cardinal.
+`_` | **Wall.** Reflect the IP through 0 degrees. See section [on walls](#walls) for details. | **Wall.** Same as Cardinal.
+`\|` | **Wall.** Reflect the IP through 90 degrees. See section [on walls](#walls) for details. | **Wall.** Same as Cardinal.
+`<` | **Move west.** Set the IP direction to west. | **Half-wall west.** Set the horizontal component of the IP direction to west.
+`>` | **Move east.** Set the IP direction to east. | **Half-wall east.** Set the horizontal component of the IP direction to east.
+`^` | **Move north.** Set the IP direction to north. | **Half-wall north.** Set the vertical component of the IP direction to north.
+`v` | **Move south.** Set the IP direction to south. | **Half-wall south.** Set the vertical component of the IP direction to south.
+`{` | **Turn left.** Rotate the IP direction left by 90 degrees. | **Turn left.** Rotate the IP direction left by 90 degrees.
+`}` | **Turn right.** Rotate the IP direction right by 90 degrees. | **Turn right.** Rotate the IP direction right by 90 degrees.
+`=` | **Sign junction.** Pop **n**. Act like `{` if **n** is negative, like `}` if **n** is positive. Has no further effect if **n = 0**. | **Compare junction.** Pop **b**. Pop **a**. Act like `{` if **a < b**, act like `}` if **a > b**. Has no further effect if **a = b**. Comparisons are based on the lexicographic ordering of the strings.
+`#` | **Skip.** Skip the next command. This is implemented by adding a **0** to the *front* of the iterator queue. | **Skip.** Same as Cardinal. (Technically, this one uses **""** as the iterator, but **""** and **0** are functionally equivalent as iterators.)
+`$` | **Skip if 0.** Pop **n**. Act like `#` if **n = 0**, do nothing otherwise. | **Skip if empty.** Pop **s**. Act like `#` if **s = ""**, do nothing otherwise.
+`j` | **Jump.** Pop **y**. Pop **x**. Push the current IP address to the return address stack. Jump to **(x,y)**.<sup>\*</sup> | **Jump.** Pop **s**. Search the grid for the label **s**. If the label is not found, do nothing. Otherwise, push the current IP address to the return address stack and jump to the last cell of the label. See the section [on labels](#labels) for details.<sup>\*</sup>
+`J` | **Raw jump.** Same as `j`, but does not push the current IP to the return address stack.<sup>\*</sup> | **Raw jump.** Same as `j`, but does not push the current IP to the return address stack.<sup>\*</sup>
+`k` | **Return.** Pop an address from the return address stack and jump there.<sup>\*</sup> | **Return.** Same as Cardinal.
+`K` | **Raw return.** Peek at the top of the return address stack and jump there.<sup>\*</sup> | **Raw return.** Same as Cardinal.
+`w` | **Push return address.** Push the current IP address to the return address stack (without jumping anywhere). | **Push return address.** Same as Cardinal.
+`W` | **Discard return address.** Pop and discard the top of the return address stack. | **Discard return address.** Same as Cardinal.
+`&` | **Repeat.** Pop **n**. Add **n** to the iterator queue. | **Fold.** Pop **s**. Add **s** to the iterator queue.
 
 <sup>\*</sup> Remember that the IP will then move *before* the next command is executed.
 
