@@ -570,7 +570,7 @@ class Cardinal < Mode
             if val > 0
                 push rand val
             elsif val == 0
-                push 0 # TODO: or something else?
+                push 0
             else
                 push -(rand val)
             end
