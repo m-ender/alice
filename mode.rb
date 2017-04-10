@@ -993,8 +993,6 @@ class Ordinal < Mode
         when :trim
             push pop.gsub(/^[ \n\t]+|[ \n\t]+$/, '')
         when :transliterate
-            # TODO: maybe don't ignore additional copies of characters in source, but instead
-            #       cycle through the corresponding characters in target.
             target = pop
             source = pop
             string = pop
