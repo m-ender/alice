@@ -15,7 +15,7 @@ class Mode
     end
 
     def is_char? val
-        val && val >= 0 && val <= 1114111
+        val && (val >= 0 && val <= 0xD7FF || val >= 0xE000 && val <= 0x10FFFF)
     end
 
     def process
@@ -300,12 +300,18 @@ class Cardinal < Mode
             @state.ip -= @state.dir.vec
 
         when :input
-            # TODO: Skip any bytes that don't form valid UTF-8 characters.
             char = @state.in_str.getc
+            while char && char.scrub('') == ''
+                char = @state.in_str.getc
+            end
+
             push(char ? char.ord : -1)
         when :output
             # Will throw an error when value isn't a valid code point
-            @state.out_str << pop.chr
+            val = pop
+            if is_char?(val)
+                @state.out_str << val.chr
+            end
         when :raw_input
             push(@state.in_str.getbyte || -1)
         when :raw_output
@@ -947,11 +953,12 @@ class Ordinal < Mode
 
         when :input
             line = @state.in_str.gets
-            push(line ? line.chomp : '')
+            push(line ? line.scrub('').chomp : '')
         when :output
             @state.out_str.puts pop
         when :raw_input
-            push(@state.in_str.read || '')
+            str = @state.in_str.read
+            push(str ? str.scrub('') : '')
         when :raw_output
             @state.out_str << pop
 

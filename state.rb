@@ -284,7 +284,7 @@ class State
     private
 
     def is_char? val
-        val && val >= 0 && val <= 1114111
+        val && (val >= 0 && val <= 0xD7FF || val >= 0xE000 && val <= 0x10FFFF)
     end
 
     def parse(src)
