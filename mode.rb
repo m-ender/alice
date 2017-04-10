@@ -1000,16 +1000,25 @@ class Ordinal < Mode
         when :trim
             push pop.gsub(/^[ \n\t]+|[ \n\t]+$/, '')
         when :transliterate
-            # TODO: maybe don't ignore additional copies of characters in source, but instead
-            #       cycle through the corresponding characters in target.
             target = pop
             source = pop
             string = pop
             if target.empty?
                 source.each_char {|c| string.gsub!(c, '')}
             else
-                target += target[-1]*[source.size-target.size,0].max
-                string = string.chars.map{|c| target[source.index c]}.join
+                max_char_count = string.chars.uniq.map{|c| string.count c}.max
+                source *= max_char_count
+                string *= source.size / string.size + 1
+                string = string.chars.map{ |c|
+                    if (i = source.index c)
+                        d = target[i]
+                        source[i] = ''
+                        target[i] = ''
+                        d
+                    else
+                        c
+                    end 
+                }.join
             end
             push string
         when :discard_up_to
