@@ -8,11 +8,11 @@ Alice is a two-dimensional, stack-based, recreational programming language. It w
 
 This section introduces some general concepts about Alice's programming model.
 
-One quick definition up front: Alice considers an integer value to be a *character* if it is in the inclusive range [0, 1114111], which is the entire range of Unicode code points.
+One quick definition up front: Alice considers an integer value to be a *character* if it is in one of the inclusive ranges [0, 55295] or [57344, 1114111], which is the entire range of Unicode code points.
 
 ### Source code and grid
 
-The source file is assumed to be encoded as UTF-8. And linefeeds (0x0A) are considered to be the only line separators. If the lines aren't all of the same length, the shorter ones are padded on the right with spaces (0x20). If the file is empty it is treated as a file containing a single space.
+The source file is assumed to be encoded as UTF-8 (as are the standard input and output strings of an Alice program). And linefeeds (0x0A) are considered to be the only line separators. If the lines aren't all of the same length, the shorter ones are padded on the right with spaces (0x20). If the file is empty it is treated as a file containing a single space.
 
 Each character is then converted to its Unicode code point and the resulting values are placed on an infinite 2D grid. The first character of the source file goes at coordinate **(0,0)**, the **x** coordinate increases along lines (to the right) and the **y** coordinate increases across lines (downwards). Any cells not covered by the (padded) source file are filled with `-1`.
 
@@ -176,17 +176,17 @@ Some commands can put a **0** at the front of the queue (so it's not a strict qu
 
 ### String mode
 
-Finally, there is string mode, which can be entered and exited with the special `"` command. In string mode, Alice no longer executes any of the usual commands but instead remembers each character it passes over until string mode ends again. However, a few characters retain their special meaning:
+Finally, there is string mode, which can be entered and exited with the special `"` command. In string mode, Alice no longer executes any of the usual commands but instead remembers each cell value it passes over until string mode ends again. However, a few characters retain their special meaning:
 
 - `'` still escapes the next cell. The `'` itself is not added to the string, but the subsequent cell is, even if it's a special character.
 - Mirrors and walls (i.e. any of `/\_|`) still redirect the IP without being added to the string, unless they are escaped with `'`. In particular, this means that it's possible to switch between Cardinal and Ordinal mode while string mode is active.
-- `"` ends string mode (unless it's escaped) and processes the string.
+- `"` ends string mode (unless it's escaped) and processes the list of integers that has been recorded.
 
-Remember that entering string mode is not considered a command for the purpose of iterators, but leaving string mode does. The consequences are that leaving string mode dequeues an iterator (and therefore may process the string several times), and how the string is processed depends on whether we're in Cardinal or Ordinal mode at the time of leaving string mode.
+Remember that entering string mode is not considered a command for the purpose of iterators, but leaving string mode is. The consequences are that leaving string mode dequeues an iterator (and therefore may process the string several times), and how the string is processed depends on whether we're in Cardinal or Ordinal mode at the time of leaving string mode.
 
-If string mode ends in Cardinal mode, the resulting command pushes the code point of each character in the string once as an integer to the stack.
+If string mode ends in Cardinal mode, the resulting command pushes each of the recorded integers once to the stack.
 
-If string mode ends in Ordinal mode, the resulting command pushes the entire string to the stack.
+If string mode ends in Ordinal mode, the resulting command discards all integers that aren't valid characters and pushes the remainder as a single string to the stack.
 
 ### Labels
 
@@ -249,8 +249,8 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`"` | **Toggle string mode.** Only exiting string mode is considered a command, and pushes the individual code points of the string to the stack. See the section [on string mode](#string-mode) for details. | **Toggle string mode.** Only exiting string mode is considered a command, and pushes the entire string to the stack. See the section [on string mode](#string-mode) for details. 
-`'` | **Escape.** Pushes the code point of the next grid cell to the stack.<sup>†</sup>  | **Escape.** Pushes the character in the next grid cell to the stack.<sup>†</sup>
+`"` | **Toggle string mode.** Only exiting string mode is considered a command, and pushes all the recorded integers to the stack. See the section [on string mode](#string-mode) for details. | **Toggle string mode.** Only exiting string mode is considered a command, and pushes all recorded integers that are valid characters as a single string to the stack. See the section [on string mode](#string-mode) for details. 
+`'` | **Escape.** Pushes the value of the next grid cell to the stack.<sup>†</sup>  | **Escape.** If the next grid cell holds a valid character, that character is pushed to the stack. Otherwise, an empty string is pushed.<sup>†</sup>
 `0-9` | **Digit.** Pushes the corresponding digit to the stack. | **Digit.** Pop **s**. Append the corresponding digit as a character to **s** and push the result.
 `a` | **Ten.** Push **10**. | **Linefeed.** Push a single linefeed character (0x0A).
 `e` | **Minus one.** Push **-1**. | **Empty string.** Push **""**.
@@ -264,16 +264,16 @@ Cmd | Cardinal | Ordinal
 `i` | **Read byte.** Read a single byte from the standard input stream and push it. | **Read all.** Read the entire UTF-8-encoded standard input stream (until EOF is encountered) and push it as a single string.<sup>‡</sup>
 `I` | **Read character.** Read a single UTF-8-encoded character from the standard input stream and push its code point.<sup>‡</sup> | **Read line.** Read one UTF-8-encoded line from the standard input stream (i.e. up to the first linefeed, 0x0A) and push it as a single string. The linefeed is consumed but not included in the resulting string.<sup>‡</sup>
 `o` | **Write byte.** Pop **n**. Write its 8 least significant bits as a byte to the standard output stream. | **Write string.** Pop **s**. Write it as a UTF-8-encoded string to the standard output stream.
-`O` | **Write character.** Pop **n**. Write the UTF-8-encoded character with code point **n** to the standard output stream. | **Write line.** Pop **s**. Write it as a UTF-8-encoded string to the standard output stream, followed by a linefeed (0x0A).
+`O` | **Write character.** Pop **n**. If **n** is a valid character, write it to the standard output stream using UTF-8 encoding. | **Write line.** Pop **s**. Write it as a UTF-8-encoded string to the standard output stream, followed by a linefeed (0x0A).
 
-<sup>‡</sup> This will skip any leading bytes that do not form a valid UTF-8 character.
+<sup>‡</sup> This will skip any bytes that do not form a valid UTF-8 character.
 
 ### Grid manipulation
 
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`g` | **Get cell.** Pop **y**. Pop **x**. Get the value in the grid cell at **(x,y)** and push it. | **Get diagonal.** Pop **s**. Scan the grid for the label **s**. If the label was found, push everything after the label (on the same diagonal) as a single string. See the section [on labels](#labels) for details.
+`g` | **Get cell.** Pop **y**. Pop **x**. Get the value in the grid cell at **(x,y)** and push it. | **Get diagonal.** Pop **s**. Scan the grid for the label **s**. If the label was found, start reading characters after the end of the label (along the same diagonal) until a non-character value is found. Push the string formed by those characters to the stack. See the section [on labels](#labels) for details.
 `p` | **Put cell.** Pop **v**. Pop **y**. Pop **x**. Set the value in the grid cell at **(x,y)** to **v**. | **Put diagonal.** Pop **v**. Pop **s**. Starting at the cell after the label (on the same diagonal), write **v** onto the grid, one character per cell. If **v** is longer than the remainder of the diagonal, this will write over the edge of the grid and thereby extend the bounding box of the grid. See the section [on labels](#labels) for details.
 
 ### Stack manipulation
