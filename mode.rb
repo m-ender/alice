@@ -22,10 +22,6 @@ class Mode
         raise NotImplementedError
     end
 
-    def process_string
-        raise NotImplementedError
-    end
-
     # Returns true when the resulting cell is a command.
     def move
         raw_move if @state.cell == "'".ord
@@ -640,9 +636,9 @@ class Ordinal < Mode
         '@'  => :terminate,
 
         '0'  => :digit, '1'  => :digit, '2'  => :digit, '3'  => :digit, '4'  => :digit, '5'  => :digit, '6'  => :digit, '7'  => :digit, '8'  => :digit, '9'  => :digit,
-        '+'  => :concat,
+        '+'  => :superimpose,
         '-'  => :drop,
-        '*'  => :riffle,
+        '*'  => :concat,
         ':'  => :occurrences,
         '%'  => :split,
 
@@ -683,6 +679,7 @@ class Ordinal < Mode
         'B'  => :substrings,
         'C'  => :subsequences,
         'D'  => :deduplicate,
+        'E'  => :riffle,
         'F'  => :find,
         'G'  => :longest_common_substring,
         'H'  => :trim,
@@ -941,11 +938,14 @@ class Ordinal < Mode
             push @state.tape.keys.sort.map{|i| @state.tape[i]}.select{|v| is_char?(v)}.map(&:chr).join
 
         when :leave_string_mode
-            # Will throw an error when cell isn't a valid code point
-            push @state.current_string.map(&:chr).join
+            push @state.current_string.select{|c| is_char? c }.map(&:chr).join
         when :escape
             raw_move
-            push @state.cell.chr # Will throw an error when cell isn't a valid code point
+            if is_char?(@state.cell)
+                push @state.cell.chr
+            else
+                push ''
+            end
             @state.ip -= @state.dir.vec
 
         when :digit
@@ -962,6 +962,15 @@ class Ordinal < Mode
         when :raw_output
             @state.out_str << pop
 
+        when :superimpose
+            top = pop
+            second = pop
+            result = ""
+            [top.size, second.size].max.times do |i|
+                result << [top[i] || 0.chr, second[i] || 0.chr].max
+            end
+            push result
+            
         when :concat
             top = pop
             second = pop
