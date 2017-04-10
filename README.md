@@ -113,7 +113,7 @@ If a command attempts to pop from this stack when it's empty, the current positi
 
 While normally each command in Alice is executed once when the IP passes over it, Alice has **iterators** which let you execute a command multiple times in a row. 
 
-There is an internal [queue](https://en.wikipedia.org/wiki/Queue_(abstract_data_type)), which can hold integers and strings and which is initially empty. If the queue is empty, the default iterator is **1**. The detailed semantics of these iterators are explained below in the section on executing commands.
+There is an internal [queue](https://en.wikipedia.org/wiki/Queue_(abstract_data_type)), which can hold integers and strings and which is initially empty. If the queue is empty, the default iterator is **1**. The detailed semantics of these iterators are explained below in the section on [executing commands](#commands).
 
 ### Movement
 
@@ -168,7 +168,7 @@ Once movement ends and the IP has found a command, that command will be executed
 How the command is executed depends on the iterator:
 
 - **Repetition:** If the iterator is a positive integer **N**, the command is executed **N** times (without moving the IP in between, unless the command itself causes movement). For non-positive integers, the command isn't executed at all.
-- **Folding:** If the iterator is a string, Alice goes through each character in the string from left to right and then a) pushes that character to the stack (which we'll get to in the next section) and b) executes the current command once. Note that if the iterator is an empty string this also means that the command isn't executed at all.
+- **Folding:** If the iterator is a string, Alice goes through each character in the string from left to right and then a) pushes that character to the stack and b) executes the current command once. Note that if the iterator is an empty string this also means that the command isn't executed at all.
 
 The iterator queue will normally contain at most one value, which lets you execute the next command multiple times. However, if that next command itself adds iterators to the queue, it's possible to have multiple iterators queued up at once.
 
@@ -207,7 +207,7 @@ Note that labels cannot span multiple lines. For example, it would not be possib
 
 This section lists all the commands available in Alice, roughly grouped into a few related categories. For the sake of completeness, the non-commands `` ` `` (which is a special no-op), `/\_|` (which are mirrors and walls) and the special commands `'` and `"` are listed here again, but remember that they are treated differently for the purposes of movement.
 
-If the reference says "Pop **n**" in Cardinal mode, **n** is always an integer. In Ordinal mode, it's always a string. See the section on the **Stack** for details of potentially required type conversions. In general, **n** will be used as the variable of single integer parameters, and **x**, **y**, **z** if there are several. Similarly, **s** will be used for a single string parameter, and **a**, **b**, **c** if there are several. There are some exceptions, where other variables are more conventional, like using **n** and **k** in the context of combinatorics.
+If the reference says "Pop **n**" in Cardinal mode, **n** is always an integer. In Ordinal mode, it's always a string. See the section [on the stack](#stack) for details of potentially required type conversions. In general, **n** will be used as the variable of single integer parameters, and **x**, **y**, **z** if there are several. Similarly, **s** will be used for a single string parameter, and **a**, **b**, **c** if there are several. There are some exceptions, where other variables are more conventional, like using **n** and **k** in the context of combinatorics.
 
 When the reference refers to pushing individual characters to the stack, this refers to strings containing only that character.
 
@@ -222,10 +222,10 @@ Cmd | Cardinal | Ordinal
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
 `@` | Terminate the program. | Terminate the program.
-`/` | Reflect the IP through 67.5 degrees, switch between modes. See section on **Mirrors** for details. | Same as Cardinal.
-`\` | Reflect the IP through -67.5 degrees, switch between modes. See section on **Mirrors** for details. | Same as Cardinal.
-`_` | Reflect the IP through 0 degrees. See section on **Walls** for details. | Same as Cardinal.
-`\|` | Reflect the IP through 90 degrees. See section on **Walls** for details. | Same as Cardinal.
+`/` | Reflect the IP through 67.5 degrees, switch between modes. See section [on mirrors](#mirrors) for details. | Same as Cardinal.
+`\` | Reflect the IP through -67.5 degrees, switch between modes. See section [on mirrors](#mirrors) for details. | Same as Cardinal.
+`_` | Reflect the IP through 0 degrees. See section [on walls](#walls) for details. | Same as Cardinal.
+`\|` | Reflect the IP through 90 degrees. See section [on walls](#walls) for details. | Same as Cardinal.
 `<` | Set the IP direction to west. | Set the IP direction to southwest (northwest) if the IP is moving southeast (northeast).
 `>` | Set the IP direction to east. | Set the IP direction to southeast (northeast) if the IP is moving southwest (northwest).
 `^` | Set the IP direction to north. | Set the IP direction to northwest (northeast) if the IP is moving southwest (southeast).
@@ -235,7 +235,7 @@ Cmd | Cardinal | Ordinal
 `=` | Pop **n**. Act like `{` if **n** is negative, like `}` if **n** is positive. Has no further effect if **n = 0**. | Pop **b**. Pop **a**. Act like `{` if **a < b**, act like `}` if **a > b**. Has no further effect if **a = b**. Comparisons are based on the lexicographic ordering of the strings.
 `#` | Skip the next command. This is implemented by adding a **0** to the *front* of the iterator queue. | Same as Cardinal. (Technically, this one uses **""** as the iterator, but **""** and **0** are functionally equivalent as iterators.)
 `$` | Pop **n**. Act like `#` if **n = 0**, do nothing otherwise. | Pop **s**. Act like `#` if **s = ""**, do nothing otherwise.
-`j` | Pop **y**. Pop **x**. Push the current IP address to the return address stack. Jump to **(x,y)**.<sup>\*</sup> | Pop **s**. Search the grid for the label **s**. If the label is not found, do nothing. Otherwise, push the current IP address to the return address stack and jump to the last cell of the label.<sup>\*</sup>
+`j` | Pop **y**. Pop **x**. Push the current IP address to the return address stack. Jump to **(x,y)**.<sup>\*</sup> | Pop **s**. Search the grid for the label **s**. If the label is not found, do nothing. Otherwise, push the current IP address to the return address stack and jump to the last cell of the label. See the section [on labels](#labels) for details.<sup>\*</sup>
 `J` | Same as `j`, but does not push the current IP to the return address stack.<sup>\*</sup> | Same as `j`, but does not push the current IP to the return address stack.<sup>\*</sup>
 `k` | Pop an address from the return address stack and jump there.<sup>\*</sup> | Same as Cardinal.
 `K` | Peek at the top of the return address stack and jump there.<sup>\*</sup> | Same as Cardinal.
@@ -249,7 +249,7 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`"` | Toggles string mode. Only exiting string mode is considered a command, and pushes the individual code points of the string to the stack. See the section on **String mode** for details. | Toggles string mode. Only exiting string mode is considered a command, and pushes the entire string to the stack. See the section on **String mode** for details. 
+`"` | Toggles string mode. Only exiting string mode is considered a command, and pushes the individual code points of the string to the stack. See the section [on string mode](#string-mode) for details. | Toggles string mode. Only exiting string mode is considered a command, and pushes the entire string to the stack. See the section [on string mode](#string-mode) for details. 
 `'` | Pushes the code point of the next grid cell to the stack.<sup>†</sup>  | Pushes the character in the next grid cell to the stack.<sup>†</sup>
 `0-9` | Pushes the corresponding digit to the stack. | Pop **s**. Append the corresponding digit as a character to **s** and push the result.
 `a` | Push **10**. | Push a single linefeed character (0x0A).
@@ -273,8 +273,8 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`g` | Pop **y**. Pop **x**. Get the value in the grid cell at **(x,y)** and push it. | Pop **s**. Scan the grid for the label **s**. If the label was found, push everything after the label (on the same diagonal) as a single string.
-`p` | Pop **v**. Pop **y**. Pop **x**. Set the value in the grid cell at **(x,y)** to **v**. | Pop **v**. Pop **s**. Starting at the cell after the label (on the same diagonal), write **v** onto the grid, one character per cell. If **v** is longer than the remainder of the diagonal, this will write over the edge of the grid and thereby extend the bounding box of the grid.
+`g` | Pop **y**. Pop **x**. Get the value in the grid cell at **(x,y)** and push it. | Pop **s**. Scan the grid for the label **s**. If the label was found, push everything after the label (on the same diagonal) as a single string. See the section [on labels](#labels) for details.
+`p` | Pop **v**. Pop **y**. Pop **x**. Set the value in the grid cell at **(x,y)** to **v**. | Pop **v**. Pop **s**. Starting at the cell after the label (on the same diagonal), write **v** onto the grid, one character per cell. If **v** is longer than the remainder of the diagonal, this will write over the edge of the grid and thereby extend the bounding box of the grid. See the section [on labels](#labels) for details.
 
 ### Stack manipulation
 
