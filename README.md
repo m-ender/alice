@@ -249,11 +249,11 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`"` | Toggles string mode. Only exiting string mode is considered a command, and pushes the individual code points of the string to the stack. See the section [on string mode](#string-mode) for details. | Toggles string mode. Only exiting string mode is considered a command, and pushes the entire string to the stack. See the section [on string mode](#string-mode) for details. 
-`'` | Pushes the code point of the next grid cell to the stack.<sup>†</sup>  | Pushes the character in the next grid cell to the stack.<sup>†</sup>
-`0-9` | Pushes the corresponding digit to the stack. | Pop **s**. Append the corresponding digit as a character to **s** and push the result.
-`a` | Push **10**. | Push a single linefeed character (0x0A).
-`e` | Push **-1**. | Push an empty string.
+`"` | **Toggle string mode.** Only exiting string mode is considered a command, and pushes the individual code points of the string to the stack. See the section [on string mode](#string-mode) for details. | **Toggle string mode.** Only exiting string mode is considered a command, and pushes the entire string to the stack. See the section [on string mode](#string-mode) for details. 
+`'` | **Escape.** Pushes the code point of the next grid cell to the stack.<sup>†</sup>  | **Escape.** Pushes the character in the next grid cell to the stack.<sup>†</sup>
+`0-9` | **Digit.** Pushes the corresponding digit to the stack. | **Digit.** Pop **s**. Append the corresponding digit as a character to **s** and push the result.
+`a` | **Ten.** Push **10**. | **Linefeed.** Push a single linefeed character (0x0A).
+`e` | **Minus one.** Push **-1**. | **Empty string.** Push **""**.
 
 <sup>†</sup> The next cell will be skipped by the subsequent move, but not as part of the command. This distinction is important when working with iterators. 
 
@@ -261,10 +261,10 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`i` | Read a single byte from the standard input stream and push it. | Read the entire UTF-8-encoded standard input stream (until EOF is encountered) and push it as a single string.<sup>‡</sup>
-`I` | Read a single UTF-8-encoded character from the standard input stream and push its code point.<sup>‡</sup> | Read one UTF-8-encoded line from the standard input stream (i.e. up to the first linefeed, 0x0A) and push it as a single string. The linefeed is consumed but not included in the resulting string.<sup>‡</sup>
-`o` | Pop **n**. Write its 8 least significant bits as a byte to the standard output stream. | Pop **s**. Write it as a UTF-8-encoded string to the standard output stream.
-`O` | Pop **n**. Write the UTF-8-encoded character with code point **n** to the standard output stream. | Pop **s**. Write it as a UTF-8-encoded string to the standard output stream, followed by a linefeed (0x0A).
+`i` | **Read byte.** Read a single byte from the standard input stream and push it. | **Read all.** Read the entire UTF-8-encoded standard input stream (until EOF is encountered) and push it as a single string.<sup>‡</sup>
+`I` | **Read character.** Read a single UTF-8-encoded character from the standard input stream and push its code point.<sup>‡</sup> | **Read line.** Read one UTF-8-encoded line from the standard input stream (i.e. up to the first linefeed, 0x0A) and push it as a single string. The linefeed is consumed but not included in the resulting string.<sup>‡</sup>
+`o` | **Write byte.** Pop **n**. Write its 8 least significant bits as a byte to the standard output stream. | **Write string.** Pop **s**. Write it as a UTF-8-encoded string to the standard output stream.
+`O` | **Write character.** Pop **n**. Write the UTF-8-encoded character with code point **n** to the standard output stream. | **Write line.** Pop **s**. Write it as a UTF-8-encoded string to the standard output stream, followed by a linefeed (0x0A).
 
 <sup>‡</sup> This will skip any leading bytes that do not form a valid UTF-8 character.
 
@@ -273,31 +273,31 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`g` | Pop **y**. Pop **x**. Get the value in the grid cell at **(x,y)** and push it. | Pop **s**. Scan the grid for the label **s**. If the label was found, push everything after the label (on the same diagonal) as a single string. See the section [on labels](#labels) for details.
-`p` | Pop **v**. Pop **y**. Pop **x**. Set the value in the grid cell at **(x,y)** to **v**. | Pop **v**. Pop **s**. Starting at the cell after the label (on the same diagonal), write **v** onto the grid, one character per cell. If **v** is longer than the remainder of the diagonal, this will write over the edge of the grid and thereby extend the bounding box of the grid. See the section [on labels](#labels) for details.
+`g` | **Get cell.** Pop **y**. Pop **x**. Get the value in the grid cell at **(x,y)** and push it. | **Get diagonal.** Pop **s**. Scan the grid for the label **s**. If the label was found, push everything after the label (on the same diagonal) as a single string. See the section [on labels](#labels) for details.
+`p` | **Put cell.** Pop **v**. Pop **y**. Pop **x**. Set the value in the grid cell at **(x,y)** to **v**. | **Put diagonal.** Pop **v**. Pop **s**. Starting at the cell after the label (on the same diagonal), write **v** onto the grid, one character per cell. If **v** is longer than the remainder of the diagonal, this will write over the edge of the grid and thereby extend the bounding box of the grid. See the section [on labels](#labels) for details.
 
 ### Stack manipulation
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`,` | Pop **n**. If **n** is positive, move the element which is **n** elements below the top to the top. If **n** is negative, move the top stack element down the stack by **n** positions. These operations do not pop and push elements and therefore don't convert any data types. | Pop **s**. Use as a permutation to reorder the stack. This is done by aligning the string character-by-character with the stack elements, so that the last element corresponds to the top of the stack (and the first character corresponds to the **n**th element from the top, where **n** is the length of **s**). Then the string is sorted stably, while keeping each stack element paired with its corresponding character. Hence, the stack elements perform the reordering that is required to sort **s**. The reordered stack elements are not popped in the process, so this does not convert any data types.
-`~` | Swap. Pop **y**. Pop **x**. Push **y**. Push **x**. | Swap. Pop **b**. Pop **a**. Push **b**. Push **a**.
-`.` | Duplicate. Pop **n**. Push **n** twice. | Duplicate. Pop **s**. Push **s** twice.
-`;` | Pop one integer and discard it. | Pop one string and discard it.
-`Q` | Pop **n**. Pop **n** values and push them again, so that their order *remains the same*. This can be used to force conversion of stack elements from the top such that there are at least **n** integers on top of the stack (as opposed to strings). | Pop all stack elements and push them again, so that their order is *reversed*. This also forces conversion to strings, although there are no cases where an explicit conversion to strings can change the behaviour of a program.
-`d` | Depth. Push the number of elements currently in the stack (without popping or converting any of them). | Make a copy of each stack element, convert it to a string, join them all together (so that the top element is at the end) and push the result. This does not affect any of the existing stack elements.
+`,` | **Rotate stack.** Pop **n**. If **n** is positive, move the element which is **n** elements below the top to the top. If **n** is negative, move the top stack element down the stack by **n** positions. These operations do not pop and push elements and therefore don't convert any data types. | **Permute stack.** Pop **s**. Use as a permutation to reorder the stack. This is done by aligning the string character-by-character with the stack elements, so that the last element corresponds to the top of the stack (and the first character corresponds to the **n**th element from the top, where **n** is the length of **s**). Then the string is sorted stably, while keeping each stack element paired with its corresponding character. Hence, the stack elements perform the reordering that is required to sort **s**. The reordered stack elements are not popped in the process, so this does not convert any data types.
+`~` | **Swap.** Pop **y**. Pop **x**. Push **y**. Push **x**. | **Swap.** Pop **b**. Pop **a**. Push **b**. Push **a**.
+`.` | **Duplicate.** Pop **n**. Push **n** twice. | **Duplicate.** Pop **s**. Push **s** twice.
+`;` | **Discard.** Pop one integer and discard it. | **Discard.** Pop one string and discard it.
+`Q` | **Convert.** Pop **n**. Pop **n** values and push them again, so that their order *remains the same*. This can be used to force conversion of stack elements from the top such that there are at least **n** integers on top of the stack (as opposed to strings). | **Reverse stack.** Pop all stack elements and push them again, so that their order is *reversed*. This also forces conversion to strings, although there are no cases where an explicit conversion to strings can change the behaviour of a program.
+`d` | **Depth.** Push the number of elements currently in the stack (without popping or converting any of them). | **Join stack.** Make a copy of each stack element, convert it to a string, join them all together (so that the top element is at the end) and push the result. This does not affect any of the existing stack elements.
 
 ### Tape manipulation
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`!` | Pop **n**. Store it in the current tape cell. | Pop **s**. Store it as a word on the tape. In particular, store its characters on the tape, starting at the position of the tape head and going right. The cell right after the end of **s** gets set to **-1** to ensure that there is a word terminator.
-`?` | Push the value in the current tape cell to the stack. | Read a word from the tape cell by taking the longest run of characters from the position of the tape head to the right and push it to the stack.
-`[` | Move the tape head one cell to the left. | Move the tape head one word to the left. Specifically, move the tape head left as long as that cell holds a character (to move the tape head to the beginning of the current word) — this part will usually be skipped. Then move it one more cell to the left (to move it onto the previous word terminator). Then move it left again as long as that cell holds a character (to move the tape head to the beginning of the previous word).
-`]` | Move the tape head one cell to the right. | Move the tape head one word to the right. Specifically, move the tape head right as long as the current cell holds a character (to move the tape head to the terminator of the current word). Then move it one more cell to the right (to move it onto the beginning of the next word).
-`(` | Pop **n**. Search for **n** left of the tape head (excluding the current cell itself). If it is found, move the tape head to the nearest occurrence. | Pop **s**. Search for a word containing **s** as a substring left of the currently pointed to word (excluding that word itself). If such a word is found, move the tape head to its beginning.
-`)` | Pop **n**. Search for **n** right of the tape head (excluding the current cell itself). If it is found, move the tape head to the nearest occurrence. | Pop **s**. Search for a word containing **s** as a substring right of the currently pointed to word (excluding that word itself). If such a word is found, move the tape head to its beginning.
-`q` | Push the current *position* of the tape head. | Join all words on the tape into a single string and push it.
+`!` | **Store.** Pop **n**. Store it in the current tape cell. | **Store.** Pop **s**. Store it as a word on the tape. In particular, store its characters on the tape, starting at the position of the tape head and going right. The cell right after the end of **s** gets set to **-1** to ensure that there is a word terminator.
+`?` | **Load.** Push the value in the current tape cell to the stack. | **Load.** Read a word from the tape cell by taking the longest run of characters from the position of the tape head to the right and push it to the stack.
+`[` | **Move left.** Move the tape head one cell to the left. | **Move left.** Move the tape head one word to the left. Specifically, move the tape head left as long as that cell holds a character (to move the tape head to the beginning of the current word) — this part will usually be skipped. Then move it one more cell to the left (to move it onto the previous word terminator). Then move it left again as long as that cell holds a character (to move the tape head to the beginning of the previous word).
+`]` | **Move right.** Move the tape head one cell to the right. | **Move right.** Move the tape head one word to the right. Specifically, move the tape head right as long as the current cell holds a character (to move the tape head to the terminator of the current word). Then move it one more cell to the right (to move it onto the beginning of the next word).
+`(` | **Search left.** Pop **n**. Search for **n** left of the tape head (excluding the current cell itself). If it is found, move the tape head to the nearest occurrence. | **Search left.** Pop **s**. Search for a word containing **s** as a substring left of the currently pointed to word (excluding that word itself). If such a word is found, move the tape head to its beginning.
+`)` | **Search right.** Pop **n**. Search for **n** right of the tape head (excluding the current cell itself). If it is found, move the tape head to the nearest occurrence. | **Search right.** Pop **s**. Search for a word containing **s** as a substring right of the currently pointed to word (excluding that word itself). If such a word is found, move the tape head to its beginning.
+`q` | **Tape head.** Push the current *position* of the tape head. | **Join tape.** Join all words on the tape into a single string and push it.
 
 ### Basic arithmetic and string operations
 
