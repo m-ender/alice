@@ -393,7 +393,7 @@ class Cardinal < Mode
                 else
                     msb = 0
                 end
-                push x[msb-y+1]
+                push x[msb+y+1]
             end
 
         when :factorial
