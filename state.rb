@@ -190,7 +190,7 @@ class State
     end
 
     def peek_return
-        @return_stack.peek || [@ip.x, @ip.y]
+        @return_stack[-1] || [@ip.x, @ip.y]
     end
 
     def get_iterator
