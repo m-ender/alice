@@ -271,7 +271,7 @@ class Cardinal < Mode
             @state.mp += 1
         when :search_left
             val = pop
-            (@state.mp-1).downto(@state.tape.keys.min-1).each do |i|
+            (@state.mp-1).downto([*@state.tape.keys, 0].min-1).each do |i|
                 if @state.tape[i] == val
                     @state.mp = i
                     break
@@ -279,7 +279,7 @@ class Cardinal < Mode
             end
         when :search_right
             val = pop
-            (@state.mp+1..@state.tape.keys.max+1).each do |i|
+            (@state.mp+1..[*@state.tape.keys, 0].max+1).each do |i|
                 if @state.tape[i] == val
                     @state.mp = i
                     break
@@ -907,7 +907,7 @@ class Ordinal < Mode
             cursor = @state.rp-1
             cursor -= 1 while is_char? @state.tape[cursor-1]
 
-            (cursor-2).downto(@state.tape.keys.min-1).each do |i|
+            (cursor-2).downto([*@state.tape.keys, 0].min-1).each do |i|
                 if is_char?(@state.tape[i])
                     string << @state.tape[i]
                 elsif string.reverse[needle]
@@ -924,7 +924,7 @@ class Ordinal < Mode
             cursor = @state.rp
             cursor += 1 while is_char? @state.tape[cursor]
 
-            (cursor+1..@state.tape.keys.max+1).each do |i|
+            (cursor+1..[*@state.tape.keys, 0].max+1).each do |i|
                 if is_char?(@state.tape[i])
                     string << @state.tape[i]
                 elsif string[needle]
