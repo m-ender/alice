@@ -260,8 +260,8 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`i` | **Read byte.** Read a single byte from the standard input stream and push it. | **Read all.** Read the entire UTF-8-encoded standard input stream (until EOF is encountered) and push it as a single string.<sup>‡</sup>
-`I` | **Read character.** Read a single UTF-8-encoded character from the standard input stream and push its code point.<sup>‡</sup> | **Read line.** Read one UTF-8-encoded line from the standard input stream (i.e. up to the first linefeed, 0x0A) and push it as a single string. The linefeed is consumed but not included in the resulting string.<sup>‡</sup>
+`i` | **Read byte.** Read a single byte from the standard input stream and push it. Push `-1` at EOF instead. | **Read all.** Read the entire UTF-8-encoded standard input stream (until EOF is encountered) and push it as a single string.<sup>‡</sup>
+`I` | **Read character.** Read a single UTF-8-encoded character from the standard input stream and push its code point. Push `-1` at EOF instead.<sup>‡</sup> | **Read line.** Read one UTF-8-encoded line from the standard input stream (i.e. up to the first linefeed, 0x0A) and push it as a single string. The linefeed is consumed but not included in the resulting string.<sup>‡</sup>
 `o` | **Write byte.** Pop **n**. Write its 8 least significant bits as a byte to the standard output stream. | **Write string.** Pop **s**. Write it as a UTF-8-encoded string to the standard output stream.
 `O` | **Write character.** Pop **n**. If **n** is a valid character, write it to the standard output stream using UTF-8 encoding. | **Write line.** Pop **s**. Write it as a UTF-8-encoded string to the standard output stream, followed by a linefeed (0x0A).
 
