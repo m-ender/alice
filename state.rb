@@ -237,7 +237,7 @@ class State
         $stderr.puts "Top left coordinate: #{(@storage_offset*-1).pretty}"
         $stderr.puts "IP: #{@ip.pretty}"
         $stderr.puts "Direction: #{@dir.class}"
-        $stderr.puts "Return address stack: ... (0,0)#{@return_stack.map{|p|' '+p.pretty}.join}"
+        $stderr.puts "Return address stack: ... (0,0)#{@return_stack.map{|p|' ('+p[0].to_s+','+p[1].to_s+')'}.join}"
         $stderr.puts
     end
 
