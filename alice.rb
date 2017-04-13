@@ -50,6 +50,7 @@ class Alice
                 when "'".ord
                     @state.mode.raw_move
                     @state.current_string << @state.cell
+                    @state.ip -= @state.dir.vec
                     processed = true
                 when '"'.ord
                     @state.string_mode = false
