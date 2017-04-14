@@ -1013,22 +1013,24 @@ class Ordinal < Mode
             target = pop
             source = pop
             string = pop
-            if target.empty?
-                source.each_char {|c| string.gsub!(c, '')}
-            else
-                max_char_count = string.chars.uniq.map{|c| string.count c}.max
-                source *= max_char_count
-                target *= source.size / target.size + 1
-                string = string.chars.map{ |c|
-                    if (i = source.index c)
-                        d = target[i]
-                        source[i] = ''
-                        target[i] = ''
-                        d
-                    else
-                        c
-                    end 
-                }.join
+            if !string.empty?
+                if target.empty?
+                    source.each_char {|c| string.gsub!(c, '')}
+                else
+                    max_char_count = string.chars.uniq.map{|c| string.count c}.max
+                    source *= max_char_count
+                    target *= source.size / target.size + 1
+                    string = string.chars.map{ |c|
+                        if (i = source.index c)
+                            d = target[i]
+                            source[i] = ''
+                            target[i] = ''
+                            d
+                        else
+                            c
+                        end 
+                    }.join
+                end
             end
             push string
         when :discard_up_to
