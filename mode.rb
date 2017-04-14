@@ -1018,7 +1018,7 @@ class Ordinal < Mode
             else
                 max_char_count = string.chars.uniq.map{|c| string.count c}.max
                 source *= max_char_count
-                string *= source.size / string.size + 1
+                target *= source.size / target.size + 1
                 string = string.chars.map{ |c|
                     if (i = source.index c)
                         d = target[i]
