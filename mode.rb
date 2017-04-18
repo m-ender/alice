@@ -133,7 +133,7 @@ class Cardinal < Mode
         'J'  => :jump_raw,
         'K'  => :return_raw,
         'L'  => :lcm,
-        'M'  => :divmod,
+        'M'  => :argc,
         'N'  => :bitnot,
         'P'  => :factorial,
         'Q'  => :convert,
@@ -312,6 +312,8 @@ class Cardinal < Mode
             push(@state.in_str.getbyte || -1)
         when :raw_output
             @state.out_str.putc pop
+        when :argc
+            push @state.args.size
 
         when :digit
             push cmd.to_i
@@ -328,11 +330,6 @@ class Cardinal < Mode
         when :mod
             y = pop
             push(pop % y)
-        when :divmod
-            y = pop
-            x = pop
-            push(x / y)
-            push(x % y)
         when :inc
             push(pop+1)
         when :dec
@@ -686,7 +683,7 @@ class Ordinal < Mode
         'J'  => :jump_raw,
         'K'  => :return_raw,
         'L'  => :shortest_common_superstring,
-        'M'  => :inclusive_split,
+        'M'  => :argv,
         'N'  => :complement,
         'P'  => :permutations,
         'Q'  => :reverse_stack,
@@ -962,6 +959,9 @@ class Ordinal < Mode
             push(str ? str.scrub('') : '')
         when :raw_output
             pop.unpack('C*').each{|c| @state.out_str.putc c }
+        when :argv
+            arg = ARGV.shift || ""
+            push(arg.dup.force_encoding(Encoding::UTF_8).scrub(''))
 
         when :superimpose
             top = pop
@@ -996,12 +996,6 @@ class Ordinal < Mode
         when :split
             sep = pop
             @state.stack += pop.split(sep, -1)
-        when :inclusive_split
-            sep = pop
-            str = pop
-            splits = str.split(sep, -1)
-            str.scan(/#{Regexp.escape(sep)}/){ push splits.shift; push sep }
-            push splits.shift
         when :replace
             target = pop
             needle = pop
@@ -1220,7 +1214,7 @@ class Ordinal < Mode
         when :push_joined_stack
             push @state.stack.join
         when :reverse_stack
-            @state.stack.reverse!.map!(:to_s)
+            @state.stack.reverse!.map!{|x|x.to_s}
         when :permute_stack
             top = pop
             max_size = [@state.stack.size, top.size].max

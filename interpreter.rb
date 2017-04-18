@@ -3,14 +3,18 @@
 
 require_relative 'alice'
 
-source = ARGF.read
+if ARGV.size == 0
+    puts "Usage: ruby interpreter.rb source.alice [args ...]"
+else
+    source = File.read(ARGV.shift)
 
-alice = Alice.new(source)
+    alice = Alice.new(source)
 
-begin
-    alice.run
-rescue => e
-    alice.state.print_debug_info
-    $stderr.puts e.message
-    $stderr.puts e.backtrace
+    begin
+        alice.run
+    rescue => e
+        alice.state.print_debug_info
+        $stderr.puts e.message
+        $stderr.puts e.backtrace
+    end
 end

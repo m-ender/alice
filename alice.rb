@@ -29,12 +29,12 @@ class Alice
     class ProgramError < Exception; end
 
 
-    def self.run(src, in_str=$stdin, out_str=$stdout, max_ticks=-1)
-        new(src, in_str, out_str, max_ticks).run
+    def self.run(src, in_str=$stdin, out_str=$stdout, args=ARGV, max_ticks=-1)
+        new(src, in_str, out_str, args, max_ticks).run
     end
 
-    def initialize(src, in_str=$stdin, out_str=$stdout, max_ticks=-1)
-        @state = State.new(src, in_str, out_str, max_ticks)
+    def initialize(src, in_str=$stdin, out_str=$stdout, args=ARGV, max_ticks=-1)
+        @state = State.new(src, in_str, out_str, args, max_ticks)
     end
 
     def run

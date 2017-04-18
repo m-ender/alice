@@ -6,18 +6,19 @@ require_relative 'direction'
 
 class State
     # I'm sorry.
-    attr_accessor   :in_str, :out_str, :max_ticks,
+    attr_accessor   :in_str, :out_str, :args, :max_ticks,
                     :grid, :height, :width,
                     :ip, :dir, :storage_offset,
                     :stack, :tape, :rp, :mp, :string_mode, :current_string, 
                     :tick, :done,
                     :mode
 
-    def initialize(src, in_str=$stdin, out_str=$stdout, max_ticks=-1)
+    def initialize(src, in_str=$stdin, out_str=$stdout, args=ARGV, max_ticks=-1)
         @in_str = in_str
         @out_str = out_str
         @out_str.binmode # Put the output stream in binary mode so that
                          # we can write non-UTF-8 bytes.
+        @args = args
 
         @max_ticks = max_ticks
 
@@ -222,6 +223,7 @@ class State
         print_stack
         print_tape
         print_register
+        print_args
         print_tick
     end
 
@@ -276,6 +278,12 @@ class State
     def print_register
         $stderr.puts 'Register:'
         $stderr.puts read_register
+        $stderr.puts
+    end
+
+    def print_args
+        $stderr.puts 'Remaining arguments:'
+        $stderr.puts @args.inspect
         $stderr.puts
     end
 
