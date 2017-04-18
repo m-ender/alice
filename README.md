@@ -311,7 +311,6 @@ Cmd | Cardinal | Ordinal
 `%` | **Modulo.** Pop **y**. Pop **x**. Push **x % y** (modulo). The sign of the result matches the sign of **y**, such that **(x / y) * y + x % y = x** is guaranteed. Terminates the program with an error if **y = 0**. | **Split.** Pop **b**. Pop **a**. Split **a** into chunks separated by occurrences of **b** and push those chunks.
 `E` | **Power.** Pop **y**. Pop **x**. Push **x<sup>y</sup>**. If **x = y = 0**, push **1**. If **y** is negative, round the result towards negative infinity. | **Riffle.** Pop **b**. Pop **a**. Insert **b** between every pair of characters in **a** and push the result.
 `H` | **Abs.** Pop **n**. Push **\|n\|**. | **Trim.** Pop **s**. Remove all tabs (0x09), linefeeds (0x0A) and spaces (0x20) from both ends of the string.
-`M` | **Divmod.** Pop **y**. Pop **x**. Push both **x / y** and **x % y**. See commands `:` and `%` for details. | **Split with delimiters.** Pop **b**. Pop **a**. Split **a** before and after each non-overlapping occurrence of **b** and push the individual chunks.
 `R` | **Negate.** Pop **n**. Push **-n**. | **Reverse.** Pop **s**. Reverse **s** and push the result.
 `h` | **Increment.** Pop **n**. Push **n+1**. | **Head.** Pop **s**. Push the first character of **s**, then push the remainder of **s**. If **s == ""**, push **""** twice.
 `t` | **Decrement.** Pop **n**. Push **n-1**. | **Tail.** Pop **s**. Push the everything except the last character of **s**, then push the last character of **s**. If **s == ""**, push **""** twice.
