@@ -478,6 +478,7 @@ class Cardinal < Mode
                     x /= y
                 end
                 x *= z**order
+                push x
             end
         when :divisors
             n = pop
