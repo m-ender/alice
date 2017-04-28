@@ -388,7 +388,7 @@ class Cardinal < Mode
                 elsif x < -1
                     msb = Math.log2(~x).floor
                 else
-                    msb = 0
+                    msb = -1
                 end
                 push x[msb+y+1]
             end
