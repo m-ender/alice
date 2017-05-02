@@ -275,7 +275,7 @@ Cmd | Cardinal | Ordinal
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
 `g` | **Get cell.** Pop **y**. Pop **x**. Get the value in the grid cell at **(x,y)** and push it. | **Get diagonal.** Pop **s**. Scan the grid for the label **s**. If the label was found, start reading characters after the end of the label (along the same diagonal) until a non-character value is found. Push the string formed by those characters to the stack. See the section [on labels](#labels) for details.
-`p` | **Put cell.** Pop **v**. Pop **y**. Pop **x**. Set the value in the grid cell at **(x,y)** to **v**. | **Put diagonal.** Pop **v**. Pop **s**. Starting at the cell after the label (on the same diagonal), write **v** onto the grid, one character per cell. If **v** is longer than the remainder of the diagonal, this will write over the edge of the grid and thereby extend the bounding box of the grid. See the section [on labels](#labels) for details.
+`p` | **Put cell.** Pop **y**. Pop **x**. Pop **v**. Set the value in the grid cell at **(x,y)** to **v**. | **Put diagonal.** Pop **s**. Pop **v**. Scan the grid for the label **s**. Starting at the cell after the label (on the same diagonal), write **v** onto the grid, one character per cell. If **v** is longer than the remainder of the diagonal, this will write over the edge of the grid and thereby extend the bounding box of the grid. See the section [on labels](#labels) for details.
 
 ### Stack manipulation
 

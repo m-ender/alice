@@ -256,9 +256,9 @@ class Cardinal < Mode
             x = pop
             push @state.cell(Point2D.new(x,y))
         when :put_cell
-            v = pop
             y = pop
             x = pop
+            v = pop
             @state.put_cell(Point2D.new(x,y), v)
 
         when :store_tape
@@ -871,8 +871,8 @@ class Ordinal < Mode
                 push string
             end
         when :put_diagonal
-            value = pop
             label = pop
+            value = pop
             positions = scan_source(label)
             if !positions.empty?
                 cursor = Point2D.new(*positions[0]) + @state.dir.vec
