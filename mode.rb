@@ -344,7 +344,7 @@ class Cardinal < Mode
                 if x < 0
                     r = 0
                     # If I'm ever not lazy I'll replace this with a binary search...
-                    r -= 1 while -r**-y < -x
+                    r -= 1 while (-r)**-y < -x
                     push r
                 else
                     r = 0
