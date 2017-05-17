@@ -340,7 +340,13 @@ class Cardinal < Mode
             y = pop
             x = pop
             if y < 0
-                push 1/x**y.abs
+                # Compute integer root of the absolute base
+                x = x.abs
+                y = y.abs
+                r = 0
+                # If I'm ever not lazy I'll replace this with a binary search...
+                r += 1 until r**y > x
+                push r-1
             else
                 push x**y
             end
@@ -1135,7 +1141,7 @@ class Ordinal < Mode
             push pop.chars.sample || ''
 
         when :characters
-            @stack.state += pop.chars
+            @state.stack += pop.chars
         when :runs
             pop.scan(/(.)\1*/s){push $&}
         when :head
