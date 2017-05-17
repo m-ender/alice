@@ -340,13 +340,18 @@ class Cardinal < Mode
             y = pop
             x = pop
             if y < 0
-                # Compute integer root of the absolute base
-                x = x.abs
-                y = y.abs
-                r = 0
-                # If I'm ever not lazy I'll replace this with a binary search...
-                r += 1 until r**y > x
-                push r-1
+                # Compute integer root of the absolute base, preserving sign of base
+                if x < 0
+                    r = 0
+                    # If I'm ever not lazy I'll replace this with a binary search...
+                    r -= 1 while -r**-y < -x
+                    push r
+                else
+                    r = 0
+                    # If I'm ever not lazy I'll replace this with a binary search...
+                    r += 1 until r**-y > x
+                    push (r-1)
+                end
             else
                 push x**y
             end
