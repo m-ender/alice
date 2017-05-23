@@ -291,9 +291,10 @@ class Cardinal < Mode
         when :leave_string_mode
             @state.stack += @state.current_string
         when :escape
+            old_ip = @state.ip
             raw_move
             push @state.cell
-            @state.ip -= @state.dir.vec
+            @state.ip = old_ip
 
         when :input
             char = @state.in_str.getc
@@ -949,13 +950,16 @@ class Ordinal < Mode
         when :leave_string_mode
             push @state.current_string.select{|c| is_char? c }.map(&:chr).join
         when :escape
+            old_ip = @state.ip
+            old_dir = @state.dir
             raw_move
             if is_char?(@state.cell)
                 push @state.cell.chr_utf_8
             else
                 push ''
             end
-            @state.ip -= @state.dir.vec
+            @state.ip = old_ip
+            @state.dir = old_dir
 
         when :digit
             push(pop + cmd)
