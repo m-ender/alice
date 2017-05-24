@@ -616,14 +616,9 @@ class Cardinal < Mode
         when :rotate_stack
             n = pop
             if n > 0
-                if n >= @state.stack.size
-                    push 0
-                else
-                    push @state.stack[-n-1]
-                    @state.stack.delete_at(-n-2)
-                end
+                push(@state.stack.delete_at(-n-1) || 0)
             elsif n < 0
-                top = pop
+                top = @state.stack.pop || 0 # Do this manually to prevent type conversion
                 @state.stack = [0]*[-n-@state.stack.size, 0].max + @state.stack
                 @state.stack.insert(n-1, top)
             end
