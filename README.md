@@ -362,7 +362,7 @@ Cmd | Cardinal | Ordinal
 
 Cmd | Cardinal | Ordinal
 --- | -------- | -------
-`T` | **Sleep.** Pop **n**. Pause execution for **n** milliseconds. | **Date and time.** Push the current date and time in the format **"YYYY-MM-DDTHH:MM:SS.mmm±AA:BB"** where **T** is an actual **"T"** and **±AA:BB** indicates the system's time zone.
+`T` | **Sleep.** Pop **n**. Pause execution for **n** milliseconds. Does nothing if **n** is negative. | **Date and time.** Push the current date and time in the format **"YYYY-MM-DDTHH:MM:SS.mmm±AA:BB"** where **T** is an actual **"T"** and **±AA:BB** indicates the system's time zone.
 `U` | **Random integer.** Pop **n**. If **n > 0**, push a uniformly random integer in **[0,n)**. If **n < 0**, push a uniformly random integer in **(n,0]**. If **n = 0**, push **0**. | **Random choice.** Pop **s**. Push a character chosen randomly with uniform distribution from **s**. If **s** contains duplicate characters, these will have a higher probability of being drawn. If **s** is the empty string, push the empty string again.
 `b` | **Random swap.** Pop **y**. Pop **x**. With 50% probability, swap **x** and **y**. Push **x**, push **y**. | **Shuffle.** Pop **s**. Shuffle **s** with a uniform distribution of possible resulting strings.
 `r` | **Range.** Pop **n**. If **n ≥ 0**, push all integers from **0** to **n**, inclusive. If **n < 0**, push all integers from **-n** to **0**, inclusive. | **Range expansion.** Pop **s**. First, reduce all consecutive runs of equal characters to a single copy of that character. Then, for each pair of adjacent characters **a** and **b**, insert all intermediate characters between them. Push the result. For example, **"aebbfbbbda"** becomes **"abcdedcbcdefedcbcdcba"**.
