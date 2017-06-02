@@ -626,7 +626,7 @@ class Cardinal < Mode
             n = pop
             n.times.map{pop}.reverse.each{|v| push v}
         when :sleep
-            sleep pop/1000.0
+            sleep [0, pop/1000.0].max
         when :const_10
             push 10
         when :const_m1
