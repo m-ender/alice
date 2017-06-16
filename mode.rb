@@ -186,7 +186,7 @@ class Cardinal < Mode
             val = @state.pop
             if val.is_a?(String)
                 found = false
-                val.scan(/(?:^|(?!\G))-?\d+/) { push $&.to_i; found = true }
+                val.scan(/(?:\A|(?!\G))-?\d+/) { push $&.to_i; found = true }
                 next if !found
                 val = @state.pop
             end
@@ -1013,7 +1013,7 @@ class Ordinal < Mode
             haystack = pop
             push haystack.gsub(needle, target)
         when :trim
-            push pop.gsub(/^[ \n\t]+|[ \n\t]+$/, '')
+            push pop.gsub(/\A[ \n\t]+|[ \n\t]+\z/, '')
         when :transliterate
             target = pop
             source = pop
@@ -1070,7 +1070,7 @@ class Ordinal < Mode
             str = pop
             left = ''
             right = ''
-            str.scan(/(.)(.|$)/s) do
+            str.scan(/(.)(.|\z)/m) do
                 left << $1
                 right << $2
             end
@@ -1147,7 +1147,7 @@ class Ordinal < Mode
         when :characters
             @state.stack += pop.chars
         when :runs
-            pop.scan(/(.)\1*/s){push $&}
+            pop.scan(/(.)\1*/m){push $&}
         when :head
             str = pop
             if str == ''
