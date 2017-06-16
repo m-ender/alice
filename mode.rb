@@ -1218,8 +1218,8 @@ class Ordinal < Mode
             push second
         when :dup
             top = pop
-            push top
-            push top
+            push top.clone
+            push top.clone
         when :discard
             pop
         when :push_joined_stack
