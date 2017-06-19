@@ -68,11 +68,11 @@ class Alice
                 iterator = @state.get_iterator
                 case iterator
                 when Integer
-                    iterator.times { @state.mode.process cell.chr }
+                    iterator.times { @state.mode.process cell.chr_utf_8 }
                 when String
                     iterator.each_char do |c|
                         @state.push c
-                        @state.mode.process cell.chr
+                        @state.mode.process cell.chr_utf_8
                     end
                 end
             end

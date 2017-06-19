@@ -940,10 +940,10 @@ class Ordinal < Mode
                 end
             end
         when :join_tape
-            push @state.tape.keys.sort.map{|i| @state.tape[i]}.select{|v| is_char?(v)}.map(&:chr).join
+            push @state.tape.keys.sort.map{|i| @state.tape[i]}.select{|v| is_char?(v)}.map(&:chr_utf_8).join
 
         when :leave_string_mode
-            push @state.current_string.select{|c| is_char? c }.map(&:chr).join
+            push @state.current_string.select{|c| is_char? c }.map(&:chr_utf_8).join
         when :escape
             old_ip = @state.ip
             old_dir = @state.dir
