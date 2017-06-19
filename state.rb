@@ -213,7 +213,7 @@ class State
             chars << @tape[i]
             i += 1
         end
-        chars.map(&:chr).join
+        chars.map(&:chr_utf_8).join
     end
 
     def print_debug_info
@@ -231,7 +231,7 @@ class State
         $stderr.puts 'Grid:'
         $stderr.puts ' '*(@ip.x+@storage_offset.x)+'v'
         @grid.each_with_index do |line, i|
-            line.each {|c| $stderr << (is_char?(c) && (c == 10 || c >= 32) ? c : 32).chr}
+            line.each {|c| $stderr << (is_char?(c) && (c == 10 || c >= 32) ? c : 32).chr_utf_8}
             $stderr << ' <' if i == @ip.y + @storage_offset.y
             $stderr.puts
         end
