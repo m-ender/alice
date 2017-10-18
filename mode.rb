@@ -1202,11 +1202,11 @@ class Ordinal < Mode
 
         when :expand_ranges
             val = pop
-            push val.chars.each_cons(2).map{ |a,b| 
+            push val.chars.map(&:ord).each_cons(2).map{ |a,b| 
                 if a > b
-                    (b..a).drop(1).to_a.reverse.join
+                    (b..a).drop(1).to_a.reverse.select{|c|is_char? c}.map(&:chr_utf_8).join
                 else
-                    (a...b).to_a.join
+                    (a...b).to_a.select{|c|is_char? c}.map(&:chr_utf_8).join
                 end
             }.join + (val[-1] || '')
 
