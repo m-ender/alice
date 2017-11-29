@@ -512,11 +512,16 @@ class Cardinal < Mode
             k = pop
             n = pop
 
-            if n != 0
-                if k > 0
-                    (2..k).each {|i| n /= i while n % i == 0}
-                else
-                    -2.downto(k) {|i| n /= i while n % i == 0}
+            if n.abs > 1
+                factors = Prime.prime_division(n.abs)
+                n_dropped = 0
+                while !factors.empty? && factors[0][0] <= k.abs
+                    pr, m = factors.shift
+                    n_dropped += m
+                end
+                n = Prime.int_from_prime_division(factors) * (n <=> 0)
+                if k < 0 && n_dropped.odd?
+                    n *= -1
                 end
             end
 
