@@ -79,7 +79,7 @@ class State
         if offset.x < 0
             @width -= offset.x
             @storage_offset.x -= offset.x
-            @grid.map{|l| [-1]*(-offset.x) + l}
+            @grid.map{|l| l.unshift(*[-1]*(-offset.x))}
             offset.x = 0
         end
 
