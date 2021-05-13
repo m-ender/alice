@@ -466,7 +466,7 @@ class Cardinal < Mode
         when :lcm
             push (pop.lcm pop)
         when :floor
-            y = pop
+            y = pop.abs
             x = pop
             push (x/y)*y
         when :replace_divisors
